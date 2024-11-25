@@ -1,0 +1,8 @@
+Photorealistic image, sharp focus, microstock style, happy dog eating green beans, colorful, vibrant, green beans scattered around, playful expression on dog's face,  bright lighting
+ --ar 16:9 --q 2
+Photorealistic image, a happy dog, sharp focus, vibrant colors, microstock style, a Golden Retriever happily eating a handful of bright green beans,  closeup, joyful expression
+ --ar 16:9 --q 2
+photorealistic, sharp focus, microstock, happy dog, colorful, green bean, dog eating green bean, vibrant colors, playful, close-up
+ --ar 16:9 --q 2
+Photorealistic image, sharp focus, microstock style, happy dog, colorful,  a golden retriever happily munching on a pile of vibrant green beans, shallow depth of field,  bright sunlight,  lush green background
+ --ar 16:9 --q 2
