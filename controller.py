@@ -16,30 +16,35 @@ class PrompterGenerator:
         self.model_name = model_name
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(model_name=self.model_name)
-
-    def prepare_input(self, prompt):
-        return input(prompt).strip()
     
     def prompt_generator(self, main_base, image_style, theme=None, elements=None, emotional=None, color=None, image_detail=None, aspect=None):
-        create_prompt = f'The generated image from the prompt is use for selling in Microstock, It must not include specific tradmark, logo, quotation marks, and tradmark logo, tradmark word, output commentary.'
-        create_prompt += f'The main idea is {main_base} in {image_style} style.'
+    # Base instruction with concise phrasing
+        # print(main_base, image_style, image_detail)
+        create_prompt = (
+            f"Create a Midjourney prompt for Generate Microstock-ready image in {image_style} style. Avoid trademarks, logos, text, or brand-specific elements. "
+            f"Focus on {main_base}."
+        )
+        # Conditional additions to keep it compact
         if theme:
-            create_prompt += f" Make sure to capture essence of {theme}."
+            create_prompt += f" Highlight the essence of {theme}."
         if elements:
-            create_prompt += f" Incorporate elements of {elements}."
+            create_prompt += f" Include {elements}."
         if emotional:
-            create_prompt += f" The scene should evoke {emotional}."
+            create_prompt += f" Evoke a sense of {emotional}."
         if color:
-            create_prompt += f" The color pallate should focus on {color}."
+            create_prompt += f" Use a {color} palette."
         if image_detail:
-            create_prompt += f" Include details like {image_detail} to enchance the overall impact."
+            create_prompt += f" Add details like {image_detail}."
         if aspect:
-            create_prompt += f"For generated an image in aspect {aspect}."
-        
-        create_prompt += f"""\n \n Response me only prompt here is an example output:
-        A bulldog wearing sunglasses, riding a bicycle with a basket full of flowers, pop art style, vibrant colors, bold outlines, comic book aesthetic, dynamic pose, cityscape background
+            create_prompt += f" Render in {aspect} aspect ratio."
 
-        """
+        # Example output to ensure clarity for API
+        create_prompt += (
+            "\n\nExample output:\n"
+            "A bulldog wearing sunglasses, riding a bicycle with a basket full of flowers, "
+            "pop art style, vibrant colors, bold outlines, comic book aesthetic, dynamic pose, cityscape background."
+        )
+
         response = self.model.generate_content(create_prompt)
         
         return response
