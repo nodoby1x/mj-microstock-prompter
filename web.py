@@ -15,7 +15,7 @@ def main():
     custom_css = f"<style>{content}</style>"
     sl.markdown(custom_css, unsafe_allow_html=True)
 
-    sl.title(os.getenv("APP_NAME"))
+    sl.title("MJ Prompter For Microstock")
     sl.sidebar.header("Settings")
 
     api_key_env = os.getenv("GEMINI_API_KEY")
