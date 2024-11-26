@@ -43,6 +43,18 @@ def main():
 
     if "prompts" not in sl.session_state:
         sl.session_state.prompts = []
+
+    # Row 5 buttons
+    row5_col1, row5_col2, row5_col3 = sl.columns(3)
+    with row5_col1:
+        if sl.button("Export TXT", key="export-txt"):
+            if sl.session_state.prompts:
+                file_name = f"{'prompts'}.txt"
+                with open(file_name, "a") as f:  # Open the file in append mode
+                    f.write("\n".join(sl.session_state.prompts) + "\n")  # Add a newline after the prompts
+                sl.sidebar.success(f"Prompts appended to {file_name}")
+            else:
+                sl.sidebar.error("No prompts to export.")
     
     if sl.sidebar.button("Generate Prompts", key='generate-button'):
     # Validate API key
@@ -96,17 +108,12 @@ def main():
                 sl.error(f"Error initializing MidjourneyPromptGenerator: {str(e)}")
 
 
-    if sl.sidebar.button("Export TXT", key='txt-button'):
-        if sl.session_state.prompts:
-            file_name = f"{'prompts'}.txt"
-            with open(file_name, "w") as f:
-                f.write("\n".join(sl.session_state.prompts))
-            sl.sidebar.success(f"Prompts exported to {file_name}")
-        else:
-            sl.sidebar.error("No prompts to export.")
+    # if sl.sidebar.button("Export TXT", key='txt-button'):
+        
 
     # Display the prompts stored in session state
     if sl.session_state.prompts:
+        sl.info("Prompter ready!")
         sl.success("Generated Midjourney Prompts: Completed")
         # sl.markdown(f'<div class="prompt-output"><div class="prompt-text">{sl.session_state.prompts}</div></div>', unsafe_allow_html=True)
 
