@@ -48,6 +48,8 @@ def main():
     # Validate API key
         if api_key.strip() == "":
             sl.error("Please enter your Gemini API Key.")
+        elif main_base == "":
+            sl.error("Please fill the main base idea to create prompt.")
         else:
             try:
                 # Clear previous prompts
@@ -79,7 +81,7 @@ def main():
                             this_prompt = prompt.text.replace(".", "").strip()
                             complete_prompt = this_prompt + " " + config_mj.strip()
                             round_prompts.append(complete_prompt)
-                            time.sleep(3)
+                            time.sleep(3) #delay 3 second each prompt request
                         except Exception as e:
                             sl.error(f"Error generating prompt {i} in Round {round_num}: {str(e)}")
                     
@@ -89,7 +91,7 @@ def main():
                     # Pause before the next round
                     if round_num < round_count:
                         sl.info(f"Resting for {rest_time} seconds before the next round...")
-                        time.sleep(rest_time)
+                        time.sleep(rest_time) #delaying each round
             except Exception as e:
                 sl.error(f"Error initializing MidjourneyPromptGenerator: {str(e)}")
 
@@ -105,7 +107,7 @@ def main():
 
     # Display the prompts stored in session state
     if sl.session_state.prompts:
-        sl.success("Generated Midjourney Prompts:")
+        sl.success("Generated Midjourney Prompts: Completed")
         # sl.markdown(f'<div class="prompt-output"><div class="prompt-text">{sl.session_state.prompts}</div></div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
