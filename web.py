@@ -108,8 +108,8 @@ def main():
                 sl.error(f"Error initializing MidjourneyPromptGenerator: {str(e)}")
 
 
-    # if sl.sidebar.button("Export TXT", key='txt-button'):
-        
+    # if sl.sidebar.button("Export TXT", key='txt-button'):\
+    
 
     # Display the prompts stored in session state
     if sl.session_state.prompts:
