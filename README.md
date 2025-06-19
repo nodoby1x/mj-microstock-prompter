@@ -75,7 +75,7 @@ pandas (for CSV processing)
 
 ### **1. Clone Repository**
 ```bash
-git clone https://github.com/your-username/mj-microstock-prompter.git
+git clone https://github.com/nodoby1x/mj-microstock-prompter.git
 cd mj-microstock-prompter
 ```
 
