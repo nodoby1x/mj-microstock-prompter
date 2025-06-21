@@ -1,16 +1,16 @@
 # 🎨 MJ Microstock Prompter Pro
 
-> **Advanced Midjourney prompt generator optimized for maximum microstock sales success**
-
-*Originally based on [Midjourney-Prompt-Builder](https://github.com/Nafi7393/Midjourney-Prompt-Builder) by [Nafi7393](https://github.com/Nafi7393), now completely enhanced for professional microstock photography.*
+> **Advanced AI prompt generator for Midjourney and FLUX1.dev optimized for microstock success**
 
 ## 🌟 Overview
 
-**MJ Microstock Prompter Pro** is a comprehensive AI-powered tool designed specifically for creating **high-converting Midjourney prompts** that generate images optimized for **microstock sales success**. 
+**MJ Microstock Prompter Pro** is a comprehensive AI-powered web application designed specifically for creating **high-converting prompts** for both **Midjourney** and **FLUX1.dev** that generate images optimized for **microstock sales success**. 
 
 ### 🎯 **What makes this special?**
-- **Commercial-First Approach**: Every prompt is optimized for maximum microstock appeal
-- **Multi-AI Support**: Both Gemini and OpenAI integration for diverse prompt generation
+- **Dual AI Model Support**: Generate prompts for both Midjourney and FLUX1.dev Stable Diffusion
+- **Modern Flask Interface**: Professional web application with responsive Bootstrap UI
+- **Multi-AI Providers**: Seamless switching between Gemini and OpenAI for diverse prompt generation
+- **Image Metadata Tools**: Advanced metadata extraction and optimization for microstock platforms
 - **Real-Time Optimization**: Live analysis and suggestions for better commercial potential
 - **Microstock Intelligence**: Built-in knowledge of trending keywords and buyer preferences
 
@@ -19,26 +19,31 @@
 ## ✨ Key Features
 
 ### 🚀 **Core Functionality**
-- **Dual AI Providers**: Seamless switching between Gemini and OpenAI models
+- **Dual Model Support**: Generate prompts for Midjourney and FLUX1.dev Stable Diffusion
+- **Modern Flask Web Interface**: Professional responsive web application
+- **Multi AI Providers**: Seamless switching between Gemini and OpenAI models
 - **Smart Prompt Engineering**: Automatically injects high-value commercial keywords
 - **Bulk Generation**: Process multiple prompts with CSV import/export
+- **Image Metadata Tools**: Extract and optimize metadata for microstock platforms
 - **Real-Time Analysis**: Live marketability scoring and optimization suggestions
-- **Export Options**: Download prompts as organized TXT files with timestamps
 
 ### 🧠 **Microstock Intelligence**
 - **Category Detection**: Automatically identifies business, tech, lifestyle, healthcare niches
 - **Trend Analysis**: Suggests bestselling alternatives and trending subjects
 - **Commercial Optimization**: Ensures diversity, professionalism, and market appeal
 - **Quality Scoring**: Rates prompts for sales potential (0-100 scale)
+- **Platform Optimization**: Optimize metadata for Shutterstock, Getty, Adobe Stock, iStock
 
 ### 🎨 **Advanced Features**
-- **Preset Configurations**: Optimized Midjourney settings for different use cases
+- **FLUX1.dev Integration**: Generate high-quality Stable Diffusion prompts with negative prompts
+- **Preset Configurations**: Optimized settings for different AI models and use cases
 - **Diversity Optimization**: Automatic inclusion of inclusive demographics
 - **Professional Quality**: Studio lighting and composition recommendations
-- **SEO-Friendly**: High-demand keywords and commercial terminology
+- **Batch Processing**: Handle multiple images and prompts efficiently
 
 ### 📊 **Professional Tools**
-- **Multi-Page Interface**: Dedicated pages for single and bulk generation
+- **RESTful API**: Clean API endpoints for integration
+- **Bootstrap 5 Interface**: Modern, responsive web design
 - **Progress Tracking**: Real-time generation progress with statistics
 - **Error Handling**: Comprehensive validation and retry mechanisms
 - **Configuration Management**: Environment-based API key management
@@ -57,16 +62,19 @@
 
 ### **Prerequisites**
 - **Python 3.8+** (Recommended: 3.9 or higher)
-- **Streamlit** (Latest version)
+- **Flask** (Latest version)
 - **API Keys**: Gemini and/or OpenAI accounts
 
 ### **Dependencies**
 ```
-streamlit==1.28.0
+flask==2.3.3
 python-dotenv==1.0.0
 google-generativeai==0.3.2
 openai==1.3.0
-pandas (for CSV processing)
+pillow>=9.0.0
+piexif>=1.1.3
+pandas>=1.3.0
+difflib2>=0.1.0
 ```
 
 ---
@@ -98,15 +106,15 @@ cp .env.example .env
 # Edit .env with your API keys
 GEMINI_API_KEY=your_gemini_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
+FLASK_SECRET_KEY=your_secret_key_here
 ```
 
 ### **5. Launch Application**
 ```bash
-# Multi-page interface (Recommended)
-streamlit run app.py
+# Flask web application
+python app.py
 
-# Legacy single-page interface
-streamlit run web.py
+# The application will be available at: http://localhost:5000
 ```
 
 ---
@@ -114,24 +122,41 @@ streamlit run web.py
 ## 📚 Usage Guide
 
 ### **🎯 Single Prompt Generation**
-1. **Select AI Provider**: Choose between Gemini or OpenAI
-2. **Configure Subject**: Enter your main image concept
-3. **Add Details**: Specify style, theme, elements, and mood
-4. **Real-Time Analysis**: View marketability score and suggestions
-5. **Generate**: Create optimized microstock prompts
-6. **Export**: Download as TXT files
+1. **Navigate to GEN AI**: Access single prompt generator at `/gemini`
+2. **Select AI Provider**: Choose between Gemini or OpenAI
+3. **Configure Subject**: Enter your main image concept
+4. **Add Details**: Specify style, theme, elements, and mood
+5. **Real-Time Analysis**: View marketability score and suggestions
+6. **Generate**: Create optimized microstock prompts
+7. **Copy Results**: Use generated prompts in Midjourney
+
+### **🤖 FLUX1.dev Generation**
+1. **Navigate to FLUX1.dev**: Access FLUX generator at `/flux`
+2. **Configure Parameters**: Set main subject, style, lighting, composition
+3. **Quality Settings**: Choose inference steps and aspect ratio
+4. **Negative Prompts**: Automatically generated for better results
+5. **Generate**: Create Stable Diffusion optimized prompts
 
 ### **⚡ Bulk Processing**
-1. **Upload CSV**: Use provided template or manual entry
-2. **Configure Settings**: Set delays, retries, and batch sizes
-3. **Monitor Progress**: Track generation with live statistics
-4. **Export Results**: Download complete datasets with analysis
+1. **Navigate to Bulk Prompt**: Access batch generator at `/bulk`
+2. **Upload CSV**: Use provided template or manual entry
+3. **Configure Settings**: Set delays, retries, and batch sizes
+4. **Monitor Progress**: Track generation with live statistics
+5. **Export Results**: Download complete datasets with analysis
+
+### **📸 Image Metadata Tools**
+1. **Navigate to Image Metadata**: Access tools at `/metadata`
+2. **Upload Images**: Single or batch image processing
+3. **Extract Metadata**: AI-powered metadata extraction
+4. **Optimize for Platforms**: Format for Shutterstock, Getty, Adobe Stock
+5. **Export Data**: Download metadata in CSV or JSON format
 
 ### **📊 Optimization Features**
 - **Marketability Scoring**: 0-100 commercial appeal rating
 - **Missing Elements**: Identification of sales-boosting additions
 - **Trending Alternatives**: Suggestions for higher-performing subjects
 - **Category-Specific Tips**: Targeted advice for different industries
+- **Platform Compliance**: Ensure metadata meets platform requirements
 
 ---
 
@@ -168,18 +193,28 @@ Subject + Professional/Diverse + Modern/Contemporary + Commercial Context = High
 
 ```
 mj-microstock-prompter/
-├── app.py                    # Multi-page application entry
-├── web.py                    # Legacy single-page interface
-├── gemini_page.py           # Single prompt generator
-├── bulk_prompt.py           # Bulk processing interface
-├── controller.py            # Enhanced AI prompt controller
-├── microstock_optimizer.py  # Optimization analysis engine
-├── microstock_templates.py  # Commercial templates and keywords
-├── config.py               # Configuration management
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment configuration template
-├── style.css             # UI styling
-└── README.md            # This documentation
+├── app.py                      # Flask web application entry point
+├── controller.py               # Enhanced AI prompt controller
+├── microstock_optimizer.py     # Optimization analysis engine
+├── microstock_templates.py     # Commercial templates and keywords
+├── image_metadata_extractor.py # Image metadata processing
+├── config.py                   # Configuration management
+├── requirements.txt            # Python dependencies
+├── run_flask.py               # Flask migration verification
+├── templates/                  # HTML templates
+│   ├── base.html              # Base template with Bootstrap
+│   ├── index.html             # Home page
+│   ├── gemini.html            # Single prompt generator
+│   ├── flux.html              # FLUX1.dev generator
+│   ├── bulk.html              # Bulk processing interface
+│   └── metadata.html          # Image metadata tools
+├── static/                     # Static web assets
+│   ├── style.css              # Custom CSS styling
+│   └── app.js                 # JavaScript functions
+├── uploads/                    # Image upload directory
+├── .env.example               # Environment configuration template
+├── README.md                  # This documentation
+└── README_FLASK.md           # Flask migration documentation
 ```
 
 ---
@@ -191,6 +226,7 @@ mj-microstock-prompter/
 # API Configuration
 GEMINI_API_KEY=your_gemini_key
 OPENAI_API_KEY=your_openai_key
+FLASK_SECRET_KEY=your_secret_key
 
 # Application Settings
 DEFAULT_PROVIDER=gemini
@@ -199,10 +235,18 @@ MAX_PROMPTS_PER_REQUEST=10
 DEFAULT_DELAY_SECONDS=3
 ```
 
-### **Microstock Presets**
+### **Prompt Presets**
+
+#### **Midjourney Configuration**
 - **High-Quality Business**: `--ar 16:9 --q 2 --stylize 100 --chaos 10`
 - **Commercial Photography**: `--ar 16:9 --q 2 --stylize 50 --chaos 20`
 - **Lifestyle/Editorial**: `--ar 16:9 --q 2 --stylize 200 --chaos 30`
+
+#### **FLUX1.dev Configuration**
+- **Aspect Ratios**: 1:1 (Square), 16:9 (Landscape), 9:16 (Portrait), 4:3, 3:2
+- **Inference Steps**: 20-50 (default: 28)
+- **Quality Tags**: high resolution, sharp focus, detailed, professional
+- **Negative Prompts**: blurry, low quality, distorted, amateur
 
 ---
 
@@ -223,15 +267,35 @@ DEFAULT_DELAY_SECONDS=3
 
 ---
 
+## 🔌 API Endpoints
+
+The Flask application provides comprehensive RESTful API endpoints:
+
+### **Prompt Generation**
+- `POST /api/generate_prompts` - Generate Midjourney prompts
+- `POST /api/generate_flux_prompts` - Generate FLUX1.dev prompts  
+- `POST /api/bulk_generate` - Bulk prompt generation
+
+### **Analysis & Optimization**
+- `POST /api/analyze_prompt` - Analyze prompt commercial potential
+- `POST /api/optimize_for_platform` - Platform-specific metadata optimization
+
+### **Image Metadata**
+- `POST /api/extract_metadata` - Single image metadata extraction
+- `POST /api/batch_extract_metadata` - Batch image processing
+- `POST /api/generate_image_keywords` - AI-powered keyword generation
+- `POST /api/export_metadata` - Export metadata in CSV/JSON
+
 ## 🤝 Contributing
 
 We welcome contributions to improve microstock optimization! Areas for enhancement:
 
-- **New AI Providers**: Additional API integrations
+- **New AI Providers**: Additional API integrations (Claude, Llama, etc.)
 - **Enhanced Templates**: More category-specific optimizations
 - **UI/UX Improvements**: Better user experience design
 - **Performance**: Faster generation and processing
 - **Analytics**: Advanced success tracking
+- **Platform Integration**: Direct uploads to microstock platforms
 
 ---
 
@@ -243,7 +307,6 @@ This project is licensed under the MIT License. See LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- **Original Project**: [Midjourney-Prompt-Builder](https://github.com/Nafi7393/Midjourney-Prompt-Builder) by [Nafi7393](https://github.com/Nafi7393)
 - **Microstock Industry**: Research and insights from leading stock photography platforms
 - **AI Providers**: Google (Gemini) and OpenAI for powerful language models
 
@@ -251,10 +314,16 @@ This project is licensed under the MIT License. See LICENSE file for details.
 
 ## 🚀 **Ready to Generate Bestselling Microstock Prompts?**
 
-**Launch the application and start creating prompts optimized for maximum commercial success!**
+**Launch the Flask web application and start creating prompts optimized for maximum commercial success!**
 
 ```bash
-streamlit run app.py
+python app.py
 ```
 
-*Transform your creative ideas into profitable microstock images with AI-powered optimization.*
+Open your browser to **http://localhost:5000** and access:
+- **🎨 GEN AI**: Single Midjourney prompt generation
+- **🤖 FLUX1.dev**: Stable Diffusion prompt creation  
+- **⚡ Bulk Prompt**: Batch processing for multiple prompts
+- **📸 Image Metadata**: AI-powered metadata extraction and optimization
+
+*Transform your creative ideas into profitable microstock images with dual AI model support and advanced optimization tools.*

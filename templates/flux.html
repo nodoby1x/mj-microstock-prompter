@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}FLUX1.dev Prompt Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>FLUX1.dev Prompt Generator</h1>
+        <p class="lead">Generate optimized prompts for Stable Diffusion FLUX1.dev model</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Settings</h5>
+            </div>
+            <div class="card-body">
+                <form id="fluxPromptForm">
+                    <div class="mb-3">
+                        <label for="fluxProvider" class="form-label">AI Provider</label>
+                        <select class="form-select" id="fluxProvider" name="provider">
+                            <option value="gemini">Gemini</option>
+                            <option value="openai">OpenAI</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fluxApiKey" class="form-label">API Key</label>
+                        <input type="password" class="form-control" id="fluxApiKey" name="apiKey" placeholder="Enter your API key">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fluxModel" class="form-label">Model</label>
+                        <select class="form-select" id="fluxModel" name="model">
+                            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fluxNumPrompts" class="form-label">Prompts per Round</label>
+                        <input type="range" class="form-range" id="fluxNumPrompts" name="numPrompts" min="1" max="10" value="1">
+                        <span id="fluxNumPromptsValue">1</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fluxRoundCount" class="form-label">Number of Rounds</label>
+                        <input type="range" class="form-range" id="fluxRoundCount" name="roundCount" min="1" max="20" value="1">
+                        <span id="fluxRoundCountValue">1</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>🎨 FLUX1.dev Optimized Prompt Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form id="fluxConfigForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fluxMainSubject" class="form-label">Main Subject *</label>
+                                <input type="text" class="form-control" id="fluxMainSubject" name="mainSubject" placeholder="e.g., professional businesswoman" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fluxImageStyle" class="form-label">Image Style</label>
+                                <select class="form-select" id="fluxImageStyle" name="imageStyle">
+                                    <option value="Photography">Photography</option>
+                                    <option value="Digital Art">Digital Art</option>
+                                    <option value="Illustration">Illustration</option>
+                                    <option value="Photorealistic">Photorealistic</option>
+                                    <option value="Cinematic">Cinematic</option>
+                                    <option value="Portrait">Portrait</option>
+                                    <option value="Landscape">Landscape</option>
+                                    <option value="Abstract">Abstract</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fluxLighting" class="form-label">Lighting</label>
+                                <select class="form-select" id="fluxLighting" name="lighting">
+                                    <option value="natural lighting">Natural lighting</option>
+                                    <option value="studio lighting">Studio lighting</option>
+                                    <option value="soft lighting">Soft lighting</option>
+                                    <option value="dramatic lighting">Dramatic lighting</option>
+                                    <option value="golden hour">Golden hour</option>
+                                    <option value="cinematic lighting">Cinematic lighting</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fluxComposition" class="form-label">Composition</label>
+                                <select class="form-select" id="fluxComposition" name="composition">
+                                    <option value="medium shot">Medium shot</option>
+                                    <option value="close-up">Close-up</option>
+                                    <option value="full body">Full body</option>
+                                    <option value="wide shot">Wide shot</option>
+                                    <option value="portrait">Portrait</option>
+                                    <option value="landscape orientation">Landscape orientation</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fluxDetails" class="form-label">Additional Details</label>
+                        <input type="text" class="form-control" id="fluxDetails" name="details" placeholder="e.g., wearing business attire, modern office background">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fluxMood" class="form-label">Mood/Atmosphere</label>
+                                <input type="text" class="form-control" id="fluxMood" name="mood" placeholder="e.g., confident, professional, elegant">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fluxColorScheme" class="form-label">Color Scheme</label>
+                                <input type="text" class="form-control" id="fluxColorScheme" name="colorScheme" placeholder="e.g., warm tones, corporate blues">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fluxAspectRatio" class="form-label">Aspect Ratio</label>
+                                <select class="form-select" id="fluxAspectRatio" name="aspectRatio">
+                                    <option value="1:1 (Square)">1:1 (Square)</option>
+                                    <option value="4:3 (Standard)">4:3 (Standard)</option>
+                                    <option value="16:9 (Widescreen)">16:9 (Widescreen)</option>
+                                    <option value="9:16 (Portrait)">9:16 (Portrait)</option>
+                                    <option value="3:2 (Classic)">3:2 (Classic)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fluxInferenceSteps" class="form-label">Inference Steps</label>
+                                <input type="range" class="form-range" id="fluxInferenceSteps" name="inferenceSteps" min="20" max="50" value="28">
+                                <span id="fluxInferenceStepsValue">28</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fluxNegativePrompt" class="form-label">Negative Prompt</label>
+                        <input type="text" class="form-control" id="fluxNegativePrompt" name="negativePrompt" value="blurry, low quality, distorted" placeholder="What to avoid">
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-success" id="fluxGenerateBtn">🎨 Generate FLUX1.dev Prompts</button>
+                        <button type="button" class="btn btn-secondary" id="fluxClearBtn">Clear All</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-4" id="fluxPromptsContainer" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🚀 Generated FLUX1.dev Prompts</h5>
+                </div>
+                <div class="card-body" id="fluxPromptsContent">
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3" id="fluxLoadingContainer" style="display: none;">
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Generating FLUX1.dev prompts...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fluxProviderSelect = document.getElementById('fluxProvider');
+    const fluxModelSelect = document.getElementById('fluxModel');
+    const fluxNumPromptsRange = document.getElementById('fluxNumPrompts');
+    const fluxRoundCountRange = document.getElementById('fluxRoundCount');
+    const fluxInferenceStepsRange = document.getElementById('fluxInferenceSteps');
+    const fluxGenerateBtn = document.getElementById('fluxGenerateBtn');
+    const fluxClearBtn = document.getElementById('fluxClearBtn');
+    
+    // Update range displays
+    fluxNumPromptsRange.addEventListener('input', function() {
+        document.getElementById('fluxNumPromptsValue').textContent = this.value;
+    });
+    
+    fluxRoundCountRange.addEventListener('input', function() {
+        document.getElementById('fluxRoundCountValue').textContent = this.value;
+    });
+    
+    fluxInferenceStepsRange.addEventListener('input', function() {
+        document.getElementById('fluxInferenceStepsValue').textContent = this.value;
+    });
+    
+    // Update model options based on provider
+    fluxProviderSelect.addEventListener('change', function() {
+        const provider = this.value;
+        fluxModelSelect.innerHTML = '';
+        
+        if (provider === 'gemini') {
+            fluxModelSelect.innerHTML = `
+                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+            `;
+        } else {
+            fluxModelSelect.innerHTML = `
+                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                <option value="gpt-4">gpt-4</option>
+            `;
+        }
+    });
+    
+    // Generate FLUX prompts
+    fluxGenerateBtn.addEventListener('click', async function() {
+        const formData = new FormData(document.getElementById('fluxPromptForm'));
+        const configData = new FormData(document.getElementById('fluxConfigForm'));
+        
+        const data = {
+            api_key: formData.get('apiKey'),
+            provider: formData.get('provider'),
+            model: formData.get('model'),
+            main_subject: configData.get('mainSubject'),
+            image_style: configData.get('imageStyle'),
+            lighting: configData.get('lighting'),
+            composition: configData.get('composition'),
+            details: configData.get('details'),
+            mood: configData.get('mood'),
+            color_scheme: configData.get('colorScheme'),
+            negative_prompt: configData.get('negativePrompt'),
+            aspect_ratio: configData.get('aspectRatio'),
+            inference_steps: parseInt(configData.get('inferenceSteps')),
+            num_prompts: parseInt(formData.get('numPrompts')),
+            round_count: parseInt(formData.get('roundCount'))
+        };
+        
+        if (!data.api_key || !data.main_subject) {
+            alert('Please provide API key and main subject');
+            return;
+        }
+        
+        document.getElementById('fluxLoadingContainer').style.display = 'block';
+        document.getElementById('fluxPromptsContainer').style.display = 'none';
+        
+        try {
+            const response = await fetch('/api/generate_flux_prompts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                displayFluxPrompts(result.prompts);
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        } finally {
+            document.getElementById('fluxLoadingContainer').style.display = 'none';
+        }
+    });
+    
+    // Clear prompts
+    fluxClearBtn.addEventListener('click', function() {
+        document.getElementById('fluxPromptsContainer').style.display = 'none';
+        document.getElementById('fluxPromptsContent').innerHTML = '';
+    });
+    
+    function displayFluxPrompts(prompts) {
+        const container = document.getElementById('fluxPromptsContent');
+        container.innerHTML = '';
+        
+        prompts.forEach((prompt, index) => {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'mb-4';
+            promptDiv.innerHTML = `
+                <h6>FLUX1.dev Prompt ${prompt.index} (Round ${prompt.round})</h6>
+                <div class="mb-2">
+                    <label class="form-label">Positive Prompt:</label>
+                    <textarea class="form-control" rows="3" readonly>${prompt.prompt}</textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Negative Prompt:</label>
+                    <textarea class="form-control" rows="2" readonly>${prompt.negative_prompt}</textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Aspect Ratio: ${prompt.aspect_ratio}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Steps: ${prompt.inference_steps} | Provider: ${prompt.provider}</small>
+                    </div>
+                </div>
+                <hr>
+            `;
+            container.appendChild(promptDiv);
+        });
+        
+        document.getElementById('fluxPromptsContainer').style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Image Metadata{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Image Metadata</h1>
+        <p class="lead">Add metadata and optimize images for microstock platforms</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📊 Image Metadata Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" id="statusAlert">
+                    <strong>Info:</strong> Upload an image to extract metadata and optimize for microstock platforms.
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="imageUpload" class="form-label">Upload Image</label>
+                        <input type="file" class="form-control" id="imageUpload" accept="image/*" multiple>
+                        <div class="form-text">Supports JPG, PNG, TIFF, BMP, WebP. Max 16MB per file.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="aiProvider" class="form-label">AI Provider (Optional)</label>
+                        <select class="form-select" id="aiProvider">
+                            <option value="gemini">Google Gemini</option>
+                            <option value="openai">OpenAI</option>
+                        </select>
+                        <input type="password" class="form-control mt-2" id="aiApiKey" placeholder="AI API Key (for enhanced keyword generation)">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <button type="button" class="btn btn-primary" id="extractMetadataBtn">📊 Extract Metadata</button>
+                    <button type="button" class="btn btn-success" id="batchProcessBtn">🔄 Batch Process</button>
+                    <button type="button" class="btn btn-info" id="generateKeywordsBtn">🤖 Generate AI Keywords</button>
+                </div>
+                
+                <!-- Metadata Form -->
+                <div id="metadataForm" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="imageTitle" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="imageTitle" placeholder="Image title">
+                                <div class="form-text">Max 100 characters</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="imageCategory" class="form-label">Category</label>
+                                <select class="form-select" id="imageCategory">
+                                    <option value="">Select category</option>
+                                    <option value="business">Business</option>
+                                    <option value="technology">Technology</option>
+                                    <option value="lifestyle">Lifestyle</option>
+                                    <option value="nature">Nature</option>
+                                    <option value="people">People</option>
+                                    <option value="healthcare">Healthcare</option>
+                                    <option value="education">Education</option>
+                                    <option value="creative">Creative</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="imageDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="imageDescription" rows="3" placeholder="Detailed image description"></textarea>
+                        <div class="form-text">Max 200 characters</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="imageKeywords" class="form-label">Keywords</label>
+                        <textarea class="form-control" id="imageKeywords" rows="3" placeholder="Comma-separated keywords"></textarea>
+                        <div class="form-text">Max 50 keywords recommended</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="targetPlatform" class="form-label">Target Platform</label>
+                                <select class="form-select" id="targetPlatform">
+                                    <option value="shutterstock">Shutterstock</option>
+                                    <option value="getty">Getty Images</option>
+                                    <option value="adobe_stock">Adobe Stock</option>
+                                    <option value="istock">iStock</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="imageModel" class="form-label">Model Release</label>
+                                <select class="form-select" id="imageModel">
+                                    <option value="">Select option</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                    <option value="not_applicable">Not Applicable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-info" id="optimizeBtn">🎯 Optimize for Platform</button>
+                        <button type="button" class="btn btn-success" id="saveMetadataBtn">💾 Save Metadata</button>
+                        <button type="button" class="btn btn-primary" id="exportBtn">📤 Export</button>
+                    </div>
+                </div>
+                
+                <!-- Results Display -->
+                <div id="resultsSection" style="display: none;">
+                    <hr>
+                    <h6>📋 Extraction Results</h6>
+                    <div id="resultsContent"></div>
+                </div>
+                
+                <div class="mt-4">
+                    <h6>✅ Available Features:</h6>
+                    <ul>
+                        <li>✅ Batch image metadata processing</li>
+                        <li>✅ Automatic keyword generation using AI</li>
+                        <li>✅ Microstock platform optimization</li>
+                        <li>✅ EXIF data management</li>
+                        <li>✅ Compliance checking for different stock platforms</li>
+                        <li>✅ CSV/JSON export functionality</li>
+                        <li>✅ Quality assessment and scoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const imageUpload = document.getElementById('imageUpload');
+    const extractBtn = document.getElementById('extractMetadataBtn');
+    const batchBtn = document.getElementById('batchProcessBtn');
+    const generateBtn = document.getElementById('generateKeywordsBtn');
+    const optimizeBtn = document.getElementById('optimizeBtn');
+    const saveBtn = document.getElementById('saveMetadataBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const statusAlert = document.getElementById('statusAlert');
+    const metadataForm = document.getElementById('metadataForm');
+    const resultsSection = document.getElementById('resultsSection');
+    const resultsContent = document.getElementById('resultsContent');
+    
+    let currentMetadata = {};
+    let extractedResults = [];
+    
+    // Show status message
+    function showStatus(message, type = 'info') {
+        statusAlert.className = `alert alert-${type}`;
+        statusAlert.innerHTML = `<strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}`;
+    }
+    
+    // Show loading state
+    function setLoading(button, loading) {
+        if (loading) {
+            button.disabled = true;
+            button.innerHTML = button.innerHTML.replace(/^[^\s]+/, '⏳');
+        } else {
+            button.disabled = false;
+            button.innerHTML = button.innerHTML.replace('⏳', button.getAttribute('data-original-text') || '📊');
+        }
+    }
+    
+    // Store original button text
+    [extractBtn, batchBtn, generateBtn, optimizeBtn, saveBtn, exportBtn].forEach(btn => {
+        btn.setAttribute('data-original-text', btn.innerHTML.split(' ')[0]);
+    });
+    
+    // Extract metadata from single image
+    extractBtn.addEventListener('click', async function() {
+        const files = imageUpload.files;
+        if (!files.length) {
+            showStatus('Please select an image file first.', 'warning');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('image', files[0]);
+        formData.append('ai_key', document.getElementById('aiApiKey').value);
+        formData.append('ai_provider', document.getElementById('aiProvider').value);
+        
+        setLoading(extractBtn, true);
+        showStatus('Extracting metadata from image...', 'info');
+        
+        try {
+            const response = await fetch('/api/extract_metadata', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                currentMetadata = result.metadata;
+                displayMetadata(result.metadata);
+                showStatus('Metadata extracted successfully!', 'success');
+                metadataForm.style.display = 'block';
+                resultsSection.style.display = 'block';
+            } else {
+                showStatus(`Error: ${result.error}`, 'danger');
+            }
+        } catch (error) {
+            showStatus(`Error: ${error.message}`, 'danger');
+        } finally {
+            setLoading(extractBtn, false);
+        }
+    });
+    
+    // Batch process multiple images
+    batchBtn.addEventListener('click', async function() {
+        const files = imageUpload.files;
+        if (!files.length) {
+            showStatus('Please select one or more image files first.', 'warning');
+            return;
+        }
+        
+        const formData = new FormData();
+        for (let file of files) {
+            formData.append('images', file);
+        }
+        formData.append('ai_key', document.getElementById('aiApiKey').value);
+        formData.append('ai_provider', document.getElementById('aiProvider').value);
+        
+        setLoading(batchBtn, true);
+        showStatus(`Processing ${files.length} images...`, 'info');
+        
+        try {
+            const response = await fetch('/api/batch_extract_metadata', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                extractedResults = result.results;
+                displayBatchResults(result.results);
+                showStatus(`Successfully processed ${result.total_processed} images!`, 'success');
+                resultsSection.style.display = 'block';
+            } else {
+                showStatus(`Error: ${result.error}`, 'danger');
+            }
+        } catch (error) {
+            showStatus(`Error: ${error.message}`, 'danger');
+        } finally {
+            setLoading(batchBtn, false);
+        }
+    });
+    
+    // Generate AI keywords
+    generateBtn.addEventListener('click', async function() {
+        const description = document.getElementById('imageDescription').value;
+        const category = document.getElementById('imageCategory').value || 'business';
+        const aiKey = document.getElementById('aiApiKey').value;
+        const aiProvider = document.getElementById('aiProvider').value;
+        
+        if (!description) {
+            showStatus('Please enter an image description first.', 'warning');
+            return;
+        }
+        
+        if (!aiKey) {
+            showStatus('Please enter an AI API key to generate keywords.', 'warning');
+            return;
+        }
+        
+        setLoading(generateBtn, true);
+        showStatus('Generating AI keywords...', 'info');
+        
+        try {
+            const response = await fetch('/api/generate_image_keywords', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    description: description,
+                    category: category,
+                    ai_key: aiKey,
+                    ai_provider: aiProvider
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('imageKeywords').value = result.keywords;
+                showStatus(`Keywords generated successfully! Commercial score: ${result.analysis.marketability_score}/100`, 'success');
+            } else {
+                showStatus(`Error: ${result.error}`, 'danger');
+            }
+        } catch (error) {
+            showStatus(`Error: ${error.message}`, 'danger');
+        } finally {
+            setLoading(generateBtn, false);
+        }
+    });
+    
+    // Optimize for platform
+    optimizeBtn.addEventListener('click', async function() {
+        const title = document.getElementById('imageTitle').value;
+        const description = document.getElementById('imageDescription').value;
+        const keywords = document.getElementById('imageKeywords').value;
+        const category = document.getElementById('imageCategory').value;
+        const platform = document.getElementById('targetPlatform').value;
+        
+        if (!title || !description) {
+            showStatus('Please enter both title and description.', 'warning');
+            return;
+        }
+        
+        setLoading(optimizeBtn, true);
+        showStatus('Optimizing for platform...', 'info');
+        
+        try {
+            const response = await fetch('/api/optimize_for_platform', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    platform: platform,
+                    title: title,
+                    description: description,
+                    keywords: keywords,
+                    category: category
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const optimized = result.optimized;
+                document.getElementById('imageTitle').value = optimized.title;
+                document.getElementById('imageDescription').value = optimized.description;
+                document.getElementById('imageKeywords').value = optimized.keywords;
+                
+                let statusMsg = `Optimized for ${optimized.platform}!`;
+                if (!optimized.compliant) {
+                    statusMsg += ` Issues: ${optimized.suggestions.join(', ')}`;
+                }
+                showStatus(statusMsg, optimized.compliant ? 'success' : 'warning');
+            } else {
+                showStatus(`Error: ${result.error}`, 'danger');
+            }
+        } catch (error) {
+            showStatus(`Error: ${error.message}`, 'danger');
+        } finally {
+            setLoading(optimizeBtn, false);
+        }
+    });
+    
+    // Export results
+    exportBtn.addEventListener('click', async function() {
+        if (!extractedResults.length && !Object.keys(currentMetadata).length) {
+            showStatus('No data to export. Please extract metadata first.', 'warning');
+            return;
+        }
+        
+        const exportData = extractedResults.length ? extractedResults : [currentMetadata];
+        
+        try {
+            const response = await fetch('/api/export_metadata', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    metadata_list: exportData,
+                    format: 'csv'
+                })
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `image_metadata_${Date.now()}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showStatus('Metadata exported successfully!', 'success');
+            } else {
+                showStatus('Export failed', 'danger');
+            }
+        } catch (error) {
+            showStatus(`Export error: ${error.message}`, 'danger');
+        }
+    });
+    
+    // Display single image metadata
+    function displayMetadata(metadata) {
+        // Populate form fields
+        if (metadata.ai_analysis) {
+            document.getElementById('imageTitle').value = metadata.ai_analysis.ai_title || '';
+            document.getElementById('imageDescription').value = metadata.ai_analysis.ai_description || '';
+            document.getElementById('imageKeywords').value = metadata.ai_analysis.ai_keywords || '';
+            document.getElementById('imageCategory').value = metadata.ai_analysis.ai_category || '';
+        }
+        
+        // Display technical info
+        let html = '<div class="row">';
+        html += `<div class="col-md-6">`;
+        html += `<h6>📐 Technical Details</h6>`;
+        html += `<p><strong>Dimensions:</strong> ${metadata.width} × ${metadata.height} px</p>`;
+        html += `<p><strong>File Size:</strong> ${(metadata.file_size / 1024 / 1024).toFixed(2)} MB</p>`;
+        html += `<p><strong>Format:</strong> ${metadata.format}</p>`;
+        html += `<p><strong>Aspect Ratio:</strong> ${metadata.aspect_ratio}</p>`;
+        html += '</div>';
+        
+        html += `<div class="col-md-6">`;
+        if (metadata.microstock_optimization) {
+            html += `<h6>🎯 Microstock Analysis</h6>`;
+            html += `<p><strong>Quality Score:</strong> ${metadata.microstock_optimization.quality_score}/100</p>`;
+            html += `<p><strong>Microstock Ready:</strong> ${metadata.microstock_optimization.microstock_ready ? '✅ Yes' : '❌ No'}</p>`;
+            if (metadata.microstock_optimization.quality_issues.length) {
+                html += `<p><strong>Issues:</strong> ${metadata.microstock_optimization.quality_issues.join(', ')}</p>`;
+            }
+        }
+        html += '</div>';
+        html += '</div>';
+        
+        resultsContent.innerHTML = html;
+    }
+    
+    // Display batch processing results
+    function displayBatchResults(results) {
+        let html = '<div class="table-responsive">';
+        html += '<table class="table table-striped">';
+        html += '<thead><tr><th>Filename</th><th>Status</th><th>Quality Score</th><th>Dimensions</th><th>Issues</th></tr></thead>';
+        html += '<tbody>';
+        
+        results.forEach(result => {
+            const metadata = result.metadata || {};
+            const optimization = metadata.microstock_optimization || {};
+            
+            html += '<tr>';
+            html += `<td>${result.filename}</td>`;
+            html += `<td>${result.success ? '<span class="badge bg-success">✅ Success</span>' : '<span class="badge bg-danger">❌ Failed</span>'}</td>`;
+            html += `<td>${optimization.quality_score || 'N/A'}</td>`;
+            html += `<td>${metadata.width || 'N/A'} × ${metadata.height || 'N/A'}</td>`;
+            html += `<td>${optimization.quality_issues ? optimization.quality_issues.join(', ') : 'None'}</td>`;
+            html += '</tr>';
+        });
+        
+        html += '</tbody></table>';
+        html += '</div>';
+        
+        resultsContent.innerHTML = html;
+    }
+});
+</script>
+{% endblock %}

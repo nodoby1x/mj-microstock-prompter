@@ -161,3 +161,17 @@ cython_debug/
 
 
 prompts.txt
+
+# Flask uploads
+uploads/*
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+/.claude

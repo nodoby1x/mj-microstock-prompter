@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Prompt Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Bulk Prompt Generator</h1>
+        <p class="lead">Generate multiple prompts from CSV input or batch configuration</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>API Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form id="bulkApiForm">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="bulkProvider" class="form-label">AI Provider</label>
+                                <select class="form-select" id="bulkProvider" name="provider">
+                                    <option value="gemini">Gemini</option>
+                                    <option value="openai">OpenAI</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="bulkApiKey" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="bulkApiKey" name="apiKey" placeholder="Enter your API key">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="bulkModel" class="form-label">Model</label>
+                                <select class="form-select" id="bulkModel" name="model">
+                                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                                    <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Input Method</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="inputMethod" id="manualEntry" value="manual" checked>
+                        <label class="form-check-label" for="manualEntry">
+                            Manual Entry
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="inputMethod" id="csvUpload" value="csv">
+                        <label class="form-check-label" for="csvUpload">
+                            CSV Upload
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="manualEntrySection">
+                    <h6>Manual Prompt Configuration</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="numManualPrompts" class="form-label">Number of prompts</label>
+                                <input type="number" class="form-control" id="numManualPrompts" min="1" max="20" value="3">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="baseStyle" class="form-label">Default Style</label>
+                                <input type="text" class="form-control" id="baseStyle" value="Photography">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="manualPromptsContainer">
+                        <!-- Manual prompts will be added here dynamically -->
+                    </div>
+                    
+                    <button type="button" class="btn btn-secondary" id="updateManualPromptsBtn">Update Prompt Fields</button>
+                </div>
+                
+                <div id="csvUploadSection" style="display: none;">
+                    <h6>CSV Upload</h6>
+                    <div class="mb-3">
+                        <label for="csvFile" class="form-label">Upload CSV File</label>
+                        <input type="file" class="form-control" id="csvFile" accept=".csv">
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Expected CSV Format:</strong>
+                        main_base, image_style, theme, elements, emotional, color, image_detail, aspect
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Generation Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="delayBetween" class="form-label">Delay between prompts (seconds)</label>
+                            <input type="range" class="form-range" id="delayBetween" min="1" max="10" value="3">
+                            <span id="delayBetweenValue">3</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="maxRetries" class="form-label">Max retries per prompt</label>
+                            <input type="range" class="form-range" id="maxRetries" min="1" max="5" value="2">
+                            <span id="maxRetriesValue">2</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="batchSize" class="form-label">Batch size</label>
+                            <input type="range" class="form-range" id="batchSize" min="1" max="10" value="5">
+                            <span id="batchSizeValue">5</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="button" class="btn btn-success" id="bulkGenerateBtn">🎨 Generate Bulk Prompts</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4" id="bulkResultsContainer" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Generation Results</h5>
+                </div>
+                <div class="card-body" id="bulkResultsContent">
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3" id="bulkLoadingContainer" style="display: none;">
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Generating bulk prompts...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bulkProviderSelect = document.getElementById('bulkProvider');
+    const bulkModelSelect = document.getElementById('bulkModel');
+    const inputMethodRadios = document.querySelectorAll('input[name="inputMethod"]');
+    const manualEntrySection = document.getElementById('manualEntrySection');
+    const csvUploadSection = document.getElementById('csvUploadSection');
+    const updateManualPromptsBtn = document.getElementById('updateManualPromptsBtn');
+    const bulkGenerateBtn = document.getElementById('bulkGenerateBtn');
+    
+    // Update range displays
+    document.getElementById('delayBetween').addEventListener('input', function() {
+        document.getElementById('delayBetweenValue').textContent = this.value;
+    });
+    
+    document.getElementById('maxRetries').addEventListener('input', function() {
+        document.getElementById('maxRetriesValue').textContent = this.value;
+    });
+    
+    document.getElementById('batchSize').addEventListener('input', function() {
+        document.getElementById('batchSizeValue').textContent = this.value;
+    });
+    
+    // Update model options based on provider
+    bulkProviderSelect.addEventListener('change', function() {
+        const provider = this.value;
+        bulkModelSelect.innerHTML = '';
+        
+        if (provider === 'gemini') {
+            bulkModelSelect.innerHTML = `
+                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+            `;
+        } else {
+            bulkModelSelect.innerHTML = `
+                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                <option value="gpt-4">gpt-4</option>
+            `;
+        }
+    });
+    
+    // Handle input method toggle
+    inputMethodRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'manual') {
+                manualEntrySection.style.display = 'block';
+                csvUploadSection.style.display = 'none';
+            } else {
+                manualEntrySection.style.display = 'none';
+                csvUploadSection.style.display = 'block';
+            }
+        });
+    });
+    
+    // Update manual prompt fields
+    updateManualPromptsBtn.addEventListener('click', function() {
+        const numPrompts = parseInt(document.getElementById('numManualPrompts').value);
+        const container = document.getElementById('manualPromptsContainer');
+        container.innerHTML = '';
+        
+        for (let i = 0; i < numPrompts; i++) {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'card mb-3';
+            promptDiv.innerHTML = `
+                <div class="card-header">
+                    <h6>Prompt ${i + 1}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Main Subject</label>
+                                <input type="text" class="form-control manual-main-base" placeholder="e.g., professional businesswoman">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Details</label>
+                                <input type="text" class="form-control manual-details" placeholder="Specific details">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(promptDiv);
+        }
+    });
+    
+    // Initialize with default prompts
+    updateManualPromptsBtn.click();
+    
+    // Generate bulk prompts
+    bulkGenerateBtn.addEventListener('click', async function() {
+        const apiKey = document.getElementById('bulkApiKey').value;
+        const provider = document.getElementById('bulkProvider').value;
+        const model = document.getElementById('bulkModel').value;
+        const inputMethod = document.querySelector('input[name="inputMethod"]:checked').value;
+        
+        if (!apiKey) {
+            alert('Please provide API key');
+            return;
+        }
+        
+        let promptsData = [];
+        
+        if (inputMethod === 'manual') {
+            const baseStyle = document.getElementById('baseStyle').value;
+            const mainBases = document.querySelectorAll('.manual-main-base');
+            const details = document.querySelectorAll('.manual-details');
+            
+            for (let i = 0; i < mainBases.length; i++) {
+                if (mainBases[i].value.trim()) {
+                    promptsData.push({
+                        main_base: mainBases[i].value.trim(),
+                        image_style: baseStyle,
+                        image_detail: details[i].value.trim(),
+                        theme: '',
+                        elements: '',
+                        emotional: '',
+                        color: '',
+                        aspect: '16:9'
+                    });
+                }
+            }
+        } else {
+            // CSV upload handling would go here
+            alert('CSV upload functionality needs to be implemented');
+            return;
+        }
+        
+        if (promptsData.length === 0) {
+            alert('Please provide at least one prompt configuration');
+            return;
+        }
+        
+        const data = {
+            api_key: apiKey,
+            provider: provider,
+            model: model,
+            prompts_data: promptsData,
+            delay_between: parseInt(document.getElementById('delayBetween').value),
+            max_retries: parseInt(document.getElementById('maxRetries').value)
+        };
+        
+        document.getElementById('bulkLoadingContainer').style.display = 'block';
+        document.getElementById('bulkResultsContainer').style.display = 'none';
+        
+        try {
+            const response = await fetch('/api/bulk_generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                displayBulkResults(result.prompts);
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        } finally {
+            document.getElementById('bulkLoadingContainer').style.display = 'none';
+        }
+    });
+    
+    function displayBulkResults(prompts) {
+        const container = document.getElementById('bulkResultsContent');
+        container.innerHTML = '';
+        
+        prompts.forEach((prompt, index) => {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'mb-3';
+            promptDiv.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Prompt ${prompt.index} - ${prompt.main_base} (${prompt.status})</h6>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control" rows="3" readonly>${prompt.generated_prompt}</textarea>
+                        <small class="text-muted">Provider: ${prompt.provider}</small>
+                    </div>
+                </div>
+            `;
+            container.appendChild(promptDiv);
+        });
+        
+        document.getElementById('bulkResultsContainer').style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}MJ Prompter - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="text-center mb-4">MJ Prompter</h1>
+        <p class="text-center lead">Generate AI-powered prompts for Midjourney and FLUX1.dev</p>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">🎨 GEN AI</h5>
+                <p class="card-text">Generate individual microstock-optimized Midjourney prompts using AI</p>
+                <a href="{{ url_for('gemini_page') }}" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">⚡ FLUX1.dev</h5>
+                <p class="card-text">Generate optimized prompts for Stable Diffusion FLUX1.dev model</p>
+                <a href="{{ url_for('flux_page') }}" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">📊 Image Metadata</h5>
+                <p class="card-text">Add metadata and optimize images for microstock platforms</p>
+                <a href="{{ url_for('metadata_page') }}" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">📝 Bulk Prompt</h5>
+                <p class="card-text">Generate multiple prompts from CSV input or batch configuration</p>
+                <a href="{{ url_for('bulk_page') }}" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
