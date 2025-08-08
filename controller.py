@@ -1,37 +1,4 @@
-try:
-    import google.generativeai as genai
-except ImportError:  # pragma: no cover
-    class GenAIStub:
-        class GenerativeModel:
-            def __init__(self, *args, **kwargs):
-                pass
 
-        @staticmethod
-        def configure(*args, **kwargs):
-            pass
-
-    genai = GenAIStub()
-try:
-    import openai
-    OpenAIStub = None
-except ImportError:  # pragma: no cover
-    class OpenAIStub:
-        class OpenAI:  # placeholder for patching in tests
-            pass
-        class APIError(Exception):
-            pass
-        class RateLimitError(Exception):
-            pass
-        class AuthenticationError(Exception):
-            pass
-    openai = OpenAIStub()
-import os
-import json
-try:
-    from dotenv import load_dotenv
-except ImportError:  # pragma: no cover
-    def load_dotenv(*args, **kwargs):
-        pass
 import logging
 from typing import Optional, Dict, Any, List
 from enum import Enum
@@ -59,11 +26,11 @@ class PrompterGenerator:
         
         try:
             if self.provider == AIProvider.GEMINI:
-                if genai is None:
-                    raise ImportError("google-generativeai package is required for Gemini provider")
                 genai.configure(api_key=self.api_key)
                 self.model = genai.GenerativeModel(model_name=self.model_name)
             elif self.provider == AIProvider.OPENAI:
+                if not hasattr(openai, "OpenAI"):
+                    raise ImportError("openai is required for OpenAI provider")
                 openai.api_key = self.api_key
                 self.client = openai.OpenAI(api_key=self.api_key)
         except Exception as e:
