@@ -4,7 +4,13 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from controller import PrompterGenerator, AIProvider
+import controller
 import json
+
+# Ensure placeholder attributes exist for patching
+controller.openai = MagicMock()
+controller.genai = MagicMock()
+controller.json = json
 
 class TestPrompterGenerator(unittest.TestCase):
 
@@ -57,6 +63,20 @@ class TestPrompterGenerator(unittest.TestCase):
 
         self.assertEqual(result['text'], "a test prompt")
         self.assertEqual(result['provider'], 'openai')
+
+    @patch('controller.openai.OpenAI')
+    def test_flux_prompt_generator_openai(self, mock_openai_client):
+        """Test FLUX prompt generation using OpenAI without Midjourney flags."""
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "a flux prompt"
+        mock_openai_client.return_value.chat.completions.create.return_value = mock_response
+
+        generator = PrompterGenerator(api_key=self.api_key, provider='openai')
+        result = generator.flux_prompt_generator(main_base="test")
+
+        self.assertEqual(result['provider'], 'openai')
+        self.assertNotIn('--ar', result['text'])
+        self.assertNotIn('--v', result['text'])
 
     @patch('controller.genai.GenerativeModel')
     def test_storyboard_generator_gemini(self, mock_gemini_model):
