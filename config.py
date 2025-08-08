@@ -22,7 +22,7 @@ class Config:
     
     # Model mappings
     PROVIDER_MODELS = {
-        "gemini": ["gemini-2.5-flash", "gemini-2.5-flash"],
+        "gemini": ["gemini-2.5-flash", "gemini-1.5-pro"],
         "openai": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
     }
     
