@@ -34,8 +34,8 @@
                     <div class="mb-3">
                         <label for="fluxModel" class="form-label">Model</label>
                         <select class="form-select" id="fluxModel" name="model">
+                            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
                             <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
                         </select>
                     </div>
                     
@@ -223,8 +223,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (provider === 'gemini') {
             fluxModelSelect.innerHTML = `
+                <option value="gemini-2.5-flash">gemini-2.5-flash</option>
                 <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
             `;
         } else {
             fluxModelSelect.innerHTML = `

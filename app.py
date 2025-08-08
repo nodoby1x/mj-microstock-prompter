@@ -17,7 +17,15 @@ import zipfile
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key-here')
+app.secret_key = os.getenv('FLASK_SECRET_KEY')
+
+@app.route('/api/config')
+def api_config():
+    """Provide public configuration to the frontend."""
+    return jsonify({
+        'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
+        'OPENAI_API_KEY': os.getenv('OPENAI_API_KEY', '')
+    })
 
 # Configure upload settings
 UPLOAD_FOLDER = 'uploads'
@@ -43,6 +51,10 @@ def flux_page():
 @app.route('/bulk')
 def bulk_page():
     return render_template('bulk.html')
+
+@app.route('/imagen')
+def imagen_page():
+    return render_template('imagen.html')
 
 @app.route('/metadata')
 def metadata_page():
@@ -143,28 +155,24 @@ def generate_flux_prompts():
         for round_num in range(1, round_count + 1):
             for i in range(1, num_prompts + 1):
                 try:
-                    result = generator.prompt_generator(
+                    result = generator.flux_prompt_generator(
                         main_base=main_subject,
                         image_style=image_style,
-                        image_detail=details,
                         theme=mood,
-                        elements=f"{lighting}, {composition}",
+                        elements=details,
                         emotional=mood,
                         color=color_scheme,
-                        aspect=aspect_ratio,
+                        image_detail=details,
+                        lighting=lighting,
+                        composition=composition
                     )
                     
-                    clean_prompt = clean_generated_prompt(result["text"])
-                    flux_prompt_parts = [clean_prompt]
+                    # Clean FLUX prompt (should already be clean, but safety check)
+                    flux_prompt = clean_flux_prompt(result["text"])
                     
-                    if lighting and lighting != "natural lighting":
-                        flux_prompt_parts.append(lighting)
-                    if composition and composition != "medium shot":
-                        flux_prompt_parts.append(composition)
+                    # Add quality tags if specified
                     if quality_tags:
-                        flux_prompt_parts.extend(quality_tags)
-                    
-                    flux_prompt = ", ".join(flux_prompt_parts)
+                        flux_prompt += f", {', '.join(quality_tags)}"
                     metadata = generate_flux_prompt_metadata(flux_prompt, main_subject, image_style, mood)
                     
                     generated_prompts.append({
@@ -186,6 +194,78 @@ def generate_flux_prompts():
                     
                 except Exception as e:
                     return jsonify({'error': f'Error generating FLUX prompt: {str(e)}'}), 500
+        
+        return jsonify({'prompts': generated_prompts})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/generate_imagen_prompts', methods=['POST'])
+def generate_imagen_prompts():
+    try:
+        data = request.json
+        api_key = data.get('api_key')
+        provider = data.get('provider', 'gemini')
+        model = data.get('model')
+        main_subject = data.get('main_subject')
+        image_style = data.get('image_style', 'Photography')
+        setting = data.get('setting', '')
+        composition = data.get('composition', 'rule of thirds')
+        lighting = data.get('lighting', 'natural lighting')
+        mood = data.get('mood', 'optimistic')
+        color_palette = data.get('color_palette', 'neutral tones')
+        details = data.get('details', '')
+        theme = data.get('theme', '')
+        elements = data.get('elements', '')
+        negative_prompt = data.get('negative_prompt', 'text, logos, branding, trademarks, identifiable people, ugly, deformed, noisy, blurry, distorted, grainy')
+        num_prompts = data.get('num_prompts', 1)
+        round_count = data.get('round_count', 1)
+        
+        if not api_key or not main_subject:
+            return jsonify({'error': 'API key and main subject are required'}), 400
+        
+        generator = PrompterGenerator(api_key=api_key, model_name=model, provider=provider)
+        generated_prompts = []
+        
+        for round_num in range(1, round_count + 1):
+            for i in range(1, num_prompts + 1):
+                try:
+                    result = generator.imagen_prompt_generator(
+                        main_base=main_subject,
+                        image_style=image_style,
+                        theme=theme,
+                        elements=elements,
+                        emotional=mood,
+                        color=color_palette,
+                        image_detail=details,
+                        lighting=lighting,
+                        composition=composition,
+                        setting=setting,
+                        mood=mood
+                    )
+                    
+                    # Clean Imagen prompt
+                    imagen_prompt = clean_imagen_prompt(result["text"])
+                    
+                    metadata = generate_imagen_prompt_metadata(imagen_prompt, main_subject, image_style, mood, setting)
+                    
+                    generated_prompts.append({
+                        "prompt": imagen_prompt,
+                        "negative_prompt": negative_prompt,
+                        "title": metadata["title"],
+                        "description": metadata["description"], 
+                        "keywords": metadata["keywords"],
+                        "category": metadata["category"],
+                        "round": round_num,
+                        "index": i,
+                        "provider": result["provider"],
+                        "timestamp": time.time()
+                    })
+                    
+                    time.sleep(2)
+                    
+                except Exception as e:
+                    return jsonify({'error': f'Error generating Imagen prompt: {str(e)}'}), 500
         
         return jsonify({'prompts': generated_prompts})
         
@@ -602,20 +682,61 @@ def export_metadata():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def clean_generated_prompt(prompt_text):
+def clean_prompt(prompt_text: str, params_to_remove: list) -> str:
+    """Clean and format a prompt by removing specified parameters."""
     clean_prompt = prompt_text.replace("/imagine", "").replace("`", "").strip()
-    clean_prompt = re.sub(r'^[\s\d\-\`\|]*', '', clean_prompt)
-    clean_prompt = re.sub(r'^(--\w+(\s+[^\s]+)?[\s]*)+', '', clean_prompt)
     
-    while clean_prompt and (clean_prompt.startswith('--') or clean_prompt.startswith('`') or 
-                           (clean_prompt and clean_prompt[0].isdigit()) or clean_prompt.startswith('-')):
-        clean_prompt = re.sub(r'^--\w+(\s+[^\s\-]+)?[\s]*', '', clean_prompt)
-        clean_prompt = re.sub(r'^[\s\d\-\`\|]+', '', clean_prompt)
-        clean_prompt = clean_prompt.strip()
-        if len(clean_prompt) < 10:
-            break
+    for param in params_to_remove:
+        clean_prompt = re.sub(param, '', clean_prompt, flags=re.IGNORECASE)
+    
+    # Remove any remaining -- parameters
+    clean_prompt = re.sub(r'--\w+(?:\s+[^\s\-]+)?', '', clean_prompt)
+    
+    # Clean up extra spaces and formatting
+    clean_prompt = re.sub(r'\s+', ' ', clean_prompt)
+    clean_prompt = clean_prompt.strip(' ,-.')
     
     return clean_prompt.strip() if clean_prompt.strip() else "professional business concept"
+
+def clean_generated_prompt(prompt_text):
+    """Clean Midjourney-specific parameters from generated prompts"""
+    midjourney_params = [
+        r'--ar\s+[\d:\.]+', r'--aspect\s+[\d:\.]+',
+        r'--v\s+[\d\.]+', r'--version\s+[\d\.]+', 
+        r'--stylize\s+\d+', r'--s\s+\d+',
+        r'--chaos\s+\d+', r'--c\s+\d+',
+        r'--quality\s+[\d\.]+', r'--q\s+[\d\.]+',
+        r'--zoom\s+[\d\.]+', r'--z\s+[\d\.]+',
+        r'--style\s+\w+', r'--st\s+\w+',
+        r'--seed\s+\d+', r'--sameseed\s+\d+',
+        r'--tile', r'--iw\s+[\d\.]+', r'--uplight', r'--upbeta', r'--upanime',
+        r'--hd', r'--fast', r'--relax', r'--turbo'
+    ]
+    return clean_prompt(prompt_text, midjourney_params)
+
+def clean_flux_prompt(prompt_text):
+    """Clean and format FLUX1.dev prompts (should already be clean)"""
+    midjourney_params = [
+        r'--ar\s+[\d:\.]+', r'--aspect\s+[\d:\.]+',
+        r'--v\s+[\d\.]+', r'--version\s+[\d\.]+', 
+        r'--stylize\s+\d+', r'--s\s+\d+',
+        r'--chaos\s+\d+', r'--c\s+\d+',
+        r'--quality\s+[\d\.]+', r'--q\s+[\d\.]+',
+        r'--zoom\s+[\d\.]+', r'--style\s+\w+', r'--seed\s+\d+'
+    ]
+    return clean_prompt(prompt_text, midjourney_params)
+
+def clean_imagen_prompt(prompt_text):
+    """Clean and format Google Imagen 4 prompts"""
+    midjourney_params = [
+        r'--ar\s+[\d:\.]+', r'--aspect\s+[\d:\.]+',
+        r'--v\s+[\d\.]+', r'--version\s+[\d\.]+', 
+        r'--stylize\s+\d+', r'--s\s+\d+',
+        r'--chaos\s+\d+', r'--c\s+\d+',
+        r'--quality\s+[\d\.]+', r'--q\s+[\d\.]+',
+        r'--zoom\s+[\d\.]+', r'--style\s+\w+', r'--seed\s+\d+'
+    ]
+    return clean_prompt(prompt_text, midjourney_params)
 
 def generate_prompt_metadata(prompt_text, main_base, theme, elements):
     try:
@@ -720,6 +841,69 @@ def generate_flux_prompt_metadata(prompt_text, main_subject, image_style, mood):
             "title": f"FLUX1.dev {main_subject.title() if main_subject else 'Creative'} Image",
             "description": "High-quality image generated with FLUX1.dev for professional use.",
             "keywords": "flux, stable diffusion, high quality, professional, creative",
+            "category": "Creative"
+        }
+
+def generate_imagen_prompt_metadata(prompt_text, main_subject, image_style, mood, setting):
+    try:
+        keywords_list = []
+        
+        if main_subject:
+            keywords_list.extend(main_subject.lower().split())
+        if image_style:
+            keywords_list.append(image_style.lower())
+        if mood:
+            keywords_list.extend(mood.lower().split())
+        if setting:
+            keywords_list.extend(setting.lower().split())
+        
+        imagen_keywords = ["photorealistic", "high-resolution", "commercial", "professional", "Adobe Stock", "detailed"]
+        for keyword in imagen_keywords:
+            if keyword.lower() in prompt_text.lower():
+                keywords_list.append(keyword.lower())
+        
+        unique_keywords = list(set(keywords_list))[:15]
+        keywords_str = ", ".join(unique_keywords)
+        
+        if image_style == "Photography":
+            title = f"Professional {main_subject.title()} Photography"
+        elif image_style == "Digital Art":
+            title = f"Digital Art of {main_subject.title()}"
+        elif image_style == "Conceptual Illustration":
+            title = f"Conceptual {main_subject.title()} Illustration"
+        else:
+            title = f"{image_style} {main_subject.title()}"
+            
+        description = f"High-quality {image_style.lower()} featuring {main_subject.lower()}"
+        if setting:
+            description += f" in {setting.lower()}"
+        if mood:
+            description += f" with {mood.lower()} mood"
+        description += ". Generated using Google Imagen 4 for Adobe Stock commercial use."
+        
+        if any(word in prompt_text.lower() for word in ["business", "office", "corporate", "professional"]):
+            category = "Business"
+        elif any(word in prompt_text.lower() for word in ["portrait", "person", "face", "people"]):
+            category = "People"
+        elif any(word in prompt_text.lower() for word in ["technology", "tech", "digital", "innovation"]):
+            category = "Technology"
+        elif any(word in prompt_text.lower() for word in ["lifestyle", "home", "wellness", "health"]):
+            category = "Lifestyle"
+        else:
+            category = "Creative"
+            
+        return {
+            "title": title,
+            "description": description,
+            "keywords": keywords_str,
+            "category": category
+        }
+        
+    except Exception:
+        return {
+            "title": f"Google Imagen 4 {main_subject.title() if main_subject else 'Creative'} Image",
+            "description": "High-quality image generated with Google Imagen 4 for Adobe Stock commercial use.",
+            "keywords": "imagen, google, high quality, professional, adobe stock, commercial",
             "category": "Creative"
         }
 

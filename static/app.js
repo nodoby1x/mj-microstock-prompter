@@ -1,5 +1,17 @@
 // Common JavaScript functions for the application
 
+// Fetch config and populate API keys
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/config')
+        .then(response => response.json())
+        .then(config => {
+            const geminiKeyInput = document.getElementById('apiKey');
+            if (geminiKeyInput) {
+                geminiKeyInput.value = config.GEMINI_API_KEY || '';
+            }
+        });
+});
+
 function showAlert(message, type = 'info') {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;

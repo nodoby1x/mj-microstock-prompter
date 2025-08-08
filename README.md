@@ -230,7 +230,7 @@ FLASK_SECRET_KEY=your_secret_key
 
 # Application Settings
 DEFAULT_PROVIDER=gemini
-DEFAULT_MODEL=gemini-1.5-flash
+DEFAULT_MODEL=gemini-2.5-flash
 MAX_PROMPTS_PER_REQUEST=10
 DEFAULT_DELAY_SECONDS=3
 ```

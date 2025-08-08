@@ -34,8 +34,8 @@
                     <div class="mb-3">
                         <label for="model" class="form-label">Model</label>
                         <select class="form-select" id="model" name="model">
-                            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
                             <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
                         </select>
                     </div>
                     
@@ -185,8 +185,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (provider === 'gemini') {
             modelSelect.innerHTML = `
-                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
                 <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                <option value="gemini-2.5-pro">gemini-2.5-pro</option>
             `;
         } else {
             modelSelect.innerHTML = `

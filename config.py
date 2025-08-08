@@ -16,13 +16,13 @@ class Config:
     
     # Default Settings
     DEFAULT_PROVIDER = os.getenv("DEFAULT_PROVIDER", "gemini")
-    DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gemini-1.5-flash")
+    DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gemini-2.5-flash")
     MAX_PROMPTS_PER_REQUEST = int(os.getenv("MAX_PROMPTS_PER_REQUEST", "10"))
     DEFAULT_DELAY_SECONDS = int(os.getenv("DEFAULT_DELAY_SECONDS", "3"))
     
     # Model mappings
     PROVIDER_MODELS = {
-        "gemini": ["gemini-1.5-flash", "gemini-1.5-pro"],
+        "gemini": ["gemini-2.5-flash", "gemini-2.5-flash"],
         "openai": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
     }
     

@@ -34,6 +34,13 @@ class MicrostockOptimizer:
                 "mental health support", "fitness and wellness", "medical technology",
                 "patient care interaction", "health screening", "wellness checkup",
                 "medical research", "healthcare innovation", "patient education"
+            ],
+            "imagen": [
+                "photorealistic business portrait", "high-resolution lifestyle photography", 
+                "detailed commercial illustration", "Adobe Stock premium content",
+                "professional studio photography", "contemporary business scene",
+                "diverse professional portrait", "commercial-grade photography",
+                "premium quality lifestyle image", "detailed architectural photography"
             ]
         }
         
@@ -47,7 +54,8 @@ class MicrostockOptimizer:
         self.sales_boosting_keywords = [
             "professional", "success", "growth", "innovation", "teamwork", "leadership",
             "diversity", "modern", "technology", "health", "wellness", "business",
-            "digital", "future", "smart", "sustainable", "efficient", "collaborative"
+            "digital", "future", "smart", "sustainable", "efficient", "collaborative",
+            "photorealistic", "high-resolution", "detailed", "commercial", "premium"
         ]
     
     def analyze_prompt_potential(self, main_base: str, theme: str = "", elements: str = "") -> Dict:
@@ -230,6 +238,11 @@ class MicrostockOptimizer:
                 "Diverse family enjoying quality time together, modern home environment",
                 "Healthy morning routine, professional lifestyle, wellness and productivity",
                 "Sustainable living concept, modern eco-friendly home, green lifestyle"
+            ],
+            "imagen": [
+                "A photorealistic, high-resolution lifestyle photograph of diverse young professionals in modern office. Composition is minimalist with copy space, focus on collaboration. Lighting is soft natural morning light. Mood is optimistic and inspiring. Color palette consists of neutral tones with corporate blue accents.",
+                "A high-resolution business photograph of professional woman presenting to multicultural team in contemporary workspace. Composition follows rule of thirds, focus on leadership moment. Lighting is bright studio lighting. Mood is confident and successful. Color palette is corporate blues and modern whites.",
+                "A photorealistic still life photograph of healthy meal preparation on marble countertop. Composition is bird's-eye flat lay, focus on fresh ingredients arrangement. Lighting is soft even daylight. Mood is fresh and clean. Color palette consists of natural greens, reds, and whites."
             ]
         }
         

@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Google Imagen 4 Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1>Google Imagen 4 Generator</h1>
+        <p class="lead">Generate Adobe Stock-optimized prompts for Google Imagen 4</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Settings</h5>
+            </div>
+            <div class="card-body">
+                <form id="promptForm">
+                    <div class="mb-3">
+                        <label for="provider" class="form-label">AI Provider</label>
+                        <select class="form-select" id="provider" name="provider">
+                            <option value="gemini">Gemini</option>
+                            <option value="openai">OpenAI</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="apiKey" class="form-label">API Key</label>
+                        <input type="password" class="form-control" id="apiKey" name="apiKey" placeholder="Enter your API key">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="model" class="form-label">Model</label>
+                        <select class="form-select" id="model" name="model">
+                            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="numPrompts" class="form-label">Prompts per Round</label>
+                        <input type="range" class="form-range" id="numPrompts" name="numPrompts" min="1" max="10" value="1">
+                        <span id="numPromptsValue">1</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="roundCount" class="form-label">Number of Rounds</label>
+                        <input type="range" class="form-range" id="roundCount" name="roundCount" min="1" max="20" value="1">
+                        <span id="roundCountValue">1</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>🎨 Imagen 4 Prompt Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form id="configForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="mainSubject" class="form-label">Primary Subject *</label>
+                                <input type="text" class="form-control" id="mainSubject" name="mainSubject" placeholder="e.g., diverse group of young professionals" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="imageStyle" class="form-label">Image Type</label>
+                                <select class="form-select" id="imageStyle" name="imageStyle">
+                                    <option value="lifestyle photograph">Lifestyle Photograph</option>
+                                    <option value="business photograph">Business Photograph</option>
+                                    <option value="still life photograph">Still Life Photograph</option>
+                                    <option value="flat lay photograph">Flat Lay Photograph</option>
+                                    <option value="conceptual illustration">Conceptual Illustration</option>
+                                    <option value="vector art">Vector Art</option>
+                                    <option value="3D render">3D Render</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="setting" class="form-label">Setting/Environment</label>
+                                <input type="text" class="form-control" id="setting" name="setting" placeholder="e.g., bright, airy home office with large windows">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="composition" class="form-label">Compositional Style</label>
+                                <select class="form-select" id="composition" name="composition">
+                                    <option value="minimalist with ample copy space">Minimalist with Copy Space</option>
+                                    <option value="dynamic and asymmetrical">Dynamic and Asymmetrical</option>
+                                    <option value="centered with a strong focal point">Centered with Strong Focal Point</option>
+                                    <option value="obeying the rule of thirds">Rule of Thirds</option>
+                                    <option value="bird's-eye view flat lay">Bird's-Eye View Flat Lay</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="lighting" class="form-label">Lighting Description</label>
+                                <select class="form-select" id="lighting" name="lighting">
+                                    <option value="soft, natural morning light streaming through a window">Soft Natural Morning Light</option>
+                                    <option value="dramatic, high-contrast studio lighting">Dramatic Studio Lighting</option>
+                                    <option value="warm, golden hour sunlight">Warm Golden Hour</option>
+                                    <option value="cool, ambient light from computer screens">Cool Ambient Light</option>
+                                    <option value="bright and natural, coming from large windows">Bright Natural Window Light</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="mood" class="form-label">Mood/Atmosphere</label>
+                                <select class="form-select" id="mood" name="mood">
+                                    <option value="optimistic and inspiring">Optimistic and Inspiring</option>
+                                    <option value="calm and focused">Calm and Focused</option>
+                                    <option value="energetic and collaborative">Energetic and Collaborative</option>
+                                    <option value="luxurious and sophisticated">Luxurious and Sophisticated</option>
+                                    <option value="fresh, clean, and inspiring">Fresh, Clean, and Inspiring</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="colorPalette" class="form-label">Color Palette</label>
+                                <select class="form-select" id="colorPalette" name="colorPalette">
+                                    <option value="earthy tones and muted greens">Earthy Tones and Muted Greens</option>
+                                    <option value="vibrant and bold primary colors">Vibrant Primary Colors</option>
+                                    <option value="monochromatic with shades of blue">Monochromatic Blues</option>
+                                    <option value="soft pastel palette">Soft Pastel Palette</option>
+                                    <option value="neutral tones with pops of corporate blue and green">Neutral with Corporate Accents</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="details" class="form-label">Key Details/Action</label>
+                                <input type="text" class="form-control" id="details" name="details" placeholder="e.g., smiling and looking directly at the camera">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="theme" class="form-label">Theme</label>
+                                <input type="text" class="form-control" id="theme" name="theme" placeholder="e.g., Innovation, Collaboration">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="elements" class="form-label">Additional Elements</label>
+                                <input type="text" class="form-control" id="elements" name="elements" placeholder="e.g., modern technology, fresh ingredients">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="negativePrompt" class="form-label">Negative Prompt</label>
+                        <textarea class="form-control" id="negativePrompt" name="negativePrompt" rows="2" placeholder="text, logos, branding, trademarks, identifiable people, ugly, deformed, noisy, blurry, distorted, grainy">text, logos, branding, trademarks, identifiable people, ugly, deformed, noisy, blurry, distorted, grainy</textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-success" id="generateBtn">🎨 Generate Imagen Prompts</button>
+                        <button type="button" class="btn btn-secondary" id="clearBtn">Clear All</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="mt-4" id="promptsContainer" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🚀 Generated Imagen 4 Prompts</h5>
+                </div>
+                <div class="card-body" id="promptsContent">
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3" id="loadingContainer" style="display: none;">
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Generating Imagen 4 prompts...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const providerSelect = document.getElementById('provider');
+    const modelSelect = document.getElementById('model');
+    const numPromptsRange = document.getElementById('numPrompts');
+    const roundCountRange = document.getElementById('roundCount');
+    const generateBtn = document.getElementById('generateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    
+    // Update range displays
+    numPromptsRange.addEventListener('input', function() {
+        document.getElementById('numPromptsValue').textContent = this.value;
+    });
+    
+    roundCountRange.addEventListener('input', function() {
+        document.getElementById('roundCountValue').textContent = this.value;
+    });
+    
+    // Update model options based on provider
+    providerSelect.addEventListener('change', function() {
+        const provider = this.value;
+        modelSelect.innerHTML = '';
+        
+        if (provider === 'gemini') {
+            modelSelect.innerHTML = `
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+            `;
+        } else {
+            modelSelect.innerHTML = `
+                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                <option value="gpt-4">gpt-4</option>
+            `;
+        }
+    });
+    
+    // Generate prompts
+    generateBtn.addEventListener('click', async function() {
+        const formData = new FormData(document.getElementById('promptForm'));
+        const configData = new FormData(document.getElementById('configForm'));
+        
+        const data = {
+            api_key: formData.get('apiKey'),
+            provider: formData.get('provider'),
+            model: formData.get('model'),
+            main_subject: configData.get('mainSubject'),
+            image_style: configData.get('imageStyle'),
+            setting: configData.get('setting'),
+            composition: configData.get('composition'),
+            lighting: configData.get('lighting'),
+            mood: configData.get('mood'),
+            color_palette: configData.get('colorPalette'),
+            details: configData.get('details'),
+            theme: configData.get('theme'),
+            elements: configData.get('elements'),
+            negative_prompt: configData.get('negativePrompt'),
+            num_prompts: parseInt(formData.get('numPrompts')),
+            round_count: parseInt(formData.get('roundCount'))
+        };
+        
+        if (!data.api_key || !data.main_subject) {
+            alert('Please provide API key and primary subject');
+            return;
+        }
+        
+        document.getElementById('loadingContainer').style.display = 'block';
+        document.getElementById('promptsContainer').style.display = 'none';
+        
+        try {
+            const response = await fetch('/api/generate_imagen_prompts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                displayPrompts(result.prompts);
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        } finally {
+            document.getElementById('loadingContainer').style.display = 'none';
+        }
+    });
+    
+    // Clear prompts
+    clearBtn.addEventListener('click', function() {
+        document.getElementById('promptsContainer').style.display = 'none';
+        document.getElementById('promptsContent').innerHTML = '';
+    });
+    
+    function displayPrompts(prompts) {
+        const container = document.getElementById('promptsContent');
+        container.innerHTML = '';
+        
+        prompts.forEach((prompt, index) => {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'mb-4 border-bottom pb-3';
+            promptDiv.innerHTML = `
+                <h6>Imagen 4 Prompt ${prompt.index} (Round ${prompt.round})</h6>
+                <div class="mb-2">
+                    <label class="form-label fw-bold">Positive Prompt:</label>
+                    <textarea class="form-control" rows="4" readonly>${prompt.prompt}</textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label fw-bold">Negative Prompt:</label>
+                    <textarea class="form-control" rows="2" readonly>${prompt.negative_prompt}</textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted"><strong>Title:</strong> ${prompt.title}</small><br>
+                        <small class="text-muted"><strong>Category:</strong> ${prompt.category}</small><br>
+                        <small class="text-muted"><strong>Provider:</strong> ${prompt.provider}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted"><strong>Keywords:</strong> ${prompt.keywords}</small>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted"><strong>Description:</strong> ${prompt.description}</small>
+                </div>
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('${prompt.prompt.replace(/'/g, "\\'")}')">📋 Copy Prompt</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('${prompt.negative_prompt.replace(/'/g, "\\'")}')">📋 Copy Negative</button>
+                </div>
+            `;
+            container.appendChild(promptDiv);
+        });
+        
+        document.getElementById('promptsContainer').style.display = 'block';
+    }
+    
+    // Copy to clipboard function
+    window.copyToClipboard = function(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            // You could add a toast notification here
+            console.log('Copied to clipboard');
+        });
+    };
+});
+</script>
+{% endblock %}
