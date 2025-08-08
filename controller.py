@@ -1,9 +1,39 @@
-import google.generativeai as genai
-import openai
+try:
+    import google.generativeai as genai
+except ImportError:  # pragma: no cover
+    class GenAIStub:
+        class GenerativeModel:
+            def __init__(self, *args, **kwargs):
+                pass
+
+        @staticmethod
+        def configure(*args, **kwargs):
+            pass
+
+    genai = GenAIStub()
+try:
+    import openai
+    OpenAIStub = None
+except ImportError:  # pragma: no cover
+    class OpenAIStub:
+        class OpenAI:  # placeholder for patching in tests
+            pass
+        class APIError(Exception):
+            pass
+        class RateLimitError(Exception):
+            pass
+        class AuthenticationError(Exception):
+            pass
+    openai = OpenAIStub()
 import os
-from dotenv import load_dotenv
+import json
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover
+    def load_dotenv(*args, **kwargs):
+        pass
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from enum import Enum
 from microstock_templates import get_microstock_enhancements, build_microstock_prompt_enhancement, INDUSTRY_KEYWORDS
 import random
@@ -29,6 +59,8 @@ class PrompterGenerator:
         
         try:
             if self.provider == AIProvider.GEMINI:
+                if genai is None:
+                    raise ImportError("google-generativeai package is required for Gemini provider")
                 genai.configure(api_key=self.api_key)
                 self.model = genai.GenerativeModel(model_name=self.model_name)
             elif self.provider == AIProvider.OPENAI:
@@ -241,10 +273,54 @@ f"• PROFESSIONAL QUALITY: Studio lighting, perfect composition, sharp focus\n"
         )
         
         return create_prompt
-    
-    def imagen_prompt_generator(self, main_base: str, image_style: str = "Photography", 
-                               theme: Optional[str] = None, elements: Optional[str] = None, 
-                               emotional: Optional[str] = None, color: Optional[str] = None, 
+
+    def storyboard_generator(self, context: str, keywords: List[str], num_scenes: int) -> Dict[str, Any]:
+        """Generate storyboard scene prompts for video creation."""
+        if not context.strip():
+            raise ValueError("Context cannot be empty")
+        if not keywords:
+            raise ValueError("Keywords are required")
+        if num_scenes <= 0:
+            raise ValueError("Number of scenes must be positive")
+
+        keyword_str = ", ".join(keywords)
+        create_prompt = (
+            f"Create a storyboard for a video using the context '{context}'. "
+            f"Include the following keywords: {keyword_str}. Generate {num_scenes} scenes. "
+            "Return the result as JSON list where each item has 'scene' and 'prompt' describing the scene for video generation."
+        )
+
+        try:
+            if self.provider == AIProvider.GEMINI:
+                response = self.model.generate_content(create_prompt)
+                text = response.text
+            elif self.provider == AIProvider.OPENAI:
+                response = self.client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are an expert video storyboard generator."},
+                        {"role": "user", "content": create_prompt}
+                    ],
+                    max_tokens=300,
+                    temperature=0.7
+                )
+                text = response.choices[0].message.content
+
+            scenes = json.loads(text)
+            return {"scenes": scenes, "provider": self.provider.value}
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON from {self.provider.value}: {e}")
+            raise ValueError("Invalid response format from model") from e
+        except (openai.APIError, openai.RateLimitError, openai.AuthenticationError) as e:
+            logger.error(f"OpenAI API error: {e}")
+            raise ValueError(f"OpenAI API error: {e}") from e
+        except Exception as e:
+            logger.error(f"Error generating storyboard with {self.provider.value}: {e}")
+            raise ValueError(f"An unexpected error occurred: {e}") from e
+
+    def imagen_prompt_generator(self, main_base: str, image_style: str = "Photography",
+                               theme: Optional[str] = None, elements: Optional[str] = None,
+                               emotional: Optional[str] = None, color: Optional[str] = None,
                                image_detail: Optional[str] = None, lighting: Optional[str] = None,
                                composition: Optional[str] = None, setting: Optional[str] = None,
                                mood: Optional[str] = None) -> Dict[str, Any]:
