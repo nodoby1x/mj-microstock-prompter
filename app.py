@@ -272,6 +272,32 @@ def generate_imagen_prompts():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/api/generate_storyboard', methods=['POST'])
+def generate_storyboard():
+    try:
+        data = request.json
+        api_key = data.get('api_key')
+        provider = data.get('provider', 'gemini')
+        model = data.get('model')
+        context = data.get('context')
+        keywords = data.get('keywords', [])
+        num_scenes = data.get('num_scenes', 1)
+
+        if not api_key or not context or not keywords:
+            return jsonify({'error': 'API key, context, and keywords are required'}), 400
+
+        if isinstance(keywords, str):
+            keywords_list = [k.strip() for k in keywords.split(',') if k.strip()]
+        else:
+            keywords_list = keywords
+
+        generator = PrompterGenerator(api_key=api_key, model_name=model, provider=provider)
+        result = generator.storyboard_generator(context=context, keywords=keywords_list, num_scenes=num_scenes)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/bulk_generate', methods=['POST'])
 def bulk_generate():
     try:

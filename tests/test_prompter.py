@@ -1,7 +1,10 @@
 import unittest
 from unittest.mock import patch, MagicMock
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from controller import PrompterGenerator, AIProvider
-import openai
+import json
 
 class TestPrompterGenerator(unittest.TestCase):
 
@@ -54,6 +57,32 @@ class TestPrompterGenerator(unittest.TestCase):
 
         self.assertEqual(result['text'], "a test prompt")
         self.assertEqual(result['provider'], 'openai')
+
+    @patch('controller.genai.GenerativeModel')
+    def test_storyboard_generator_gemini(self, mock_gemini_model):
+        """Test storyboard generation using Gemini."""
+        mock_response = MagicMock()
+        mock_response.text = json.dumps([{"scene": 1, "prompt": "first scene"}])
+        mock_gemini_model.return_value.generate_content.return_value = mock_response
+
+        generator = PrompterGenerator(api_key=self.api_key, provider='gemini')
+        result = generator.storyboard_generator(context="test", keywords=["keyword"], num_scenes=1)
+
+        self.assertEqual(result['provider'], 'gemini')
+        self.assertEqual(result['scenes'][0]['scene'], 1)
+
+    @patch('controller.openai.OpenAI')
+    def test_storyboard_generator_openai(self, mock_openai_client):
+        """Test storyboard generation using OpenAI."""
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = json.dumps([{"scene": 1, "prompt": "first scene"}])
+        mock_openai_client.return_value.chat.completions.create.return_value = mock_response
+
+        generator = PrompterGenerator(api_key=self.api_key, provider='openai')
+        result = generator.storyboard_generator(context="test", keywords=["keyword"], num_scenes=1)
+
+        self.assertEqual(result['provider'], 'openai')
+        self.assertEqual(result['scenes'][0]['prompt'], 'first scene')
 
 if __name__ == '__main__':
     unittest.main()

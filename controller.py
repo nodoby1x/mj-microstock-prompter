@@ -1,51 +1,6 @@
-"""Core prompt generation logic with optional AI provider dependencies.
 
-This module originally imported the Google and OpenAI SDKs unconditionally.
-The test environment (and many minimal installations) do not include the
-`google-generativeai` package, causing an immediate `ModuleNotFoundError`
-whenever :mod:`controller` was imported.  As a result, any code – including
-the unit tests – that attempted to simply import :mod:`controller` failed
-before even exercising its functionality.
-
-To make the module robust and testable without these heavy dependencies, the
-imports are now wrapped in ``try/except`` blocks.  When a library is missing we
-set the corresponding variable to ``None`` and defer the failure until it is
-actually used.  This mirrors optional dependency patterns used across the
-Python ecosystem and allows the tests to patch these objects with mocks.
-"""
-
-try:
-    import google.generativeai as genai  # type: ignore
-except ModuleNotFoundError:  # pragma: no cover - gracefully handle optional dep
-    class _DummyGenAI:
-        """Lightweight stand‑in used when the real SDK is unavailable."""
-
-        __dummy__ = True
-
-        def configure(self, *args, **kwargs):
-            """No-op configure method; real calls require the SDK."""
-
-        class GenerativeModel:  # pragma: no cover - simple placeholder
-            def __init__(self, *args, **kwargs):
-                pass
-
-    genai = _DummyGenAI()
-
-try:
-    import openai  # type: ignore
-except ModuleNotFoundError:  # pragma: no cover
-    openai = None
-import os
-# ``python-dotenv`` is only required when running the module as a script.  The
-# tests and core functionality can operate without it, so we treat it as an
-# optional dependency as well.
-try:  # pragma: no cover - behaviour depends on environment
-    from dotenv import load_dotenv
-except ModuleNotFoundError:  # Fallback no-op if library isn't installed
-    def load_dotenv(*_args, **_kwargs):  # type: ignore
-        return None
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from enum import Enum
 from microstock_templates import get_microstock_enhancements, build_microstock_prompt_enhancement, INDUSTRY_KEYWORDS
 import random
@@ -71,10 +26,6 @@ class PrompterGenerator:
         
         try:
             if self.provider == AIProvider.GEMINI:
-                if not (hasattr(genai, "configure") and hasattr(genai, "GenerativeModel")):
-                    raise ImportError(
-                        "google-generativeai is required for Gemini provider"
-                    )
                 genai.configure(api_key=self.api_key)
                 self.model = genai.GenerativeModel(model_name=self.model_name)
             elif self.provider == AIProvider.OPENAI:
@@ -289,10 +240,54 @@ f"• PROFESSIONAL QUALITY: Studio lighting, perfect composition, sharp focus\n"
         )
         
         return create_prompt
-    
-    def imagen_prompt_generator(self, main_base: str, image_style: str = "Photography", 
-                               theme: Optional[str] = None, elements: Optional[str] = None, 
-                               emotional: Optional[str] = None, color: Optional[str] = None, 
+
+    def storyboard_generator(self, context: str, keywords: List[str], num_scenes: int) -> Dict[str, Any]:
+        """Generate storyboard scene prompts for video creation."""
+        if not context.strip():
+            raise ValueError("Context cannot be empty")
+        if not keywords:
+            raise ValueError("Keywords are required")
+        if num_scenes <= 0:
+            raise ValueError("Number of scenes must be positive")
+
+        keyword_str = ", ".join(keywords)
+        create_prompt = (
+            f"Create a storyboard for a video using the context '{context}'. "
+            f"Include the following keywords: {keyword_str}. Generate {num_scenes} scenes. "
+            "Return the result as JSON list where each item has 'scene' and 'prompt' describing the scene for video generation."
+        )
+
+        try:
+            if self.provider == AIProvider.GEMINI:
+                response = self.model.generate_content(create_prompt)
+                text = response.text
+            elif self.provider == AIProvider.OPENAI:
+                response = self.client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "You are an expert video storyboard generator."},
+                        {"role": "user", "content": create_prompt}
+                    ],
+                    max_tokens=300,
+                    temperature=0.7
+                )
+                text = response.choices[0].message.content
+
+            scenes = json.loads(text)
+            return {"scenes": scenes, "provider": self.provider.value}
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON from {self.provider.value}: {e}")
+            raise ValueError("Invalid response format from model") from e
+        except (openai.APIError, openai.RateLimitError, openai.AuthenticationError) as e:
+            logger.error(f"OpenAI API error: {e}")
+            raise ValueError(f"OpenAI API error: {e}") from e
+        except Exception as e:
+            logger.error(f"Error generating storyboard with {self.provider.value}: {e}")
+            raise ValueError(f"An unexpected error occurred: {e}") from e
+
+    def imagen_prompt_generator(self, main_base: str, image_style: str = "Photography",
+                               theme: Optional[str] = None, elements: Optional[str] = None,
+                               emotional: Optional[str] = None, color: Optional[str] = None,
                                image_detail: Optional[str] = None, lighting: Optional[str] = None,
                                composition: Optional[str] = None, setting: Optional[str] = None,
                                mood: Optional[str] = None) -> Dict[str, Any]:
