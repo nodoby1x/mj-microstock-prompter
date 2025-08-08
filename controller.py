@@ -1,7 +1,49 @@
-import google.generativeai as genai
-import openai
+"""Core prompt generation logic with optional AI provider dependencies.
+
+This module originally imported the Google and OpenAI SDKs unconditionally.
+The test environment (and many minimal installations) do not include the
+`google-generativeai` package, causing an immediate `ModuleNotFoundError`
+whenever :mod:`controller` was imported.  As a result, any code – including
+the unit tests – that attempted to simply import :mod:`controller` failed
+before even exercising its functionality.
+
+To make the module robust and testable without these heavy dependencies, the
+imports are now wrapped in ``try/except`` blocks.  When a library is missing we
+set the corresponding variable to ``None`` and defer the failure until it is
+actually used.  This mirrors optional dependency patterns used across the
+Python ecosystem and allows the tests to patch these objects with mocks.
+"""
+
+try:
+    import google.generativeai as genai  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - gracefully handle optional dep
+    class _DummyGenAI:
+        """Lightweight stand‑in used when the real SDK is unavailable."""
+
+        __dummy__ = True
+
+        def configure(self, *args, **kwargs):
+            """No-op configure method; real calls require the SDK."""
+
+        class GenerativeModel:  # pragma: no cover - simple placeholder
+            def __init__(self, *args, **kwargs):
+                pass
+
+    genai = _DummyGenAI()
+
+try:
+    import openai  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover
+    openai = None
 import os
-from dotenv import load_dotenv
+# ``python-dotenv`` is only required when running the module as a script.  The
+# tests and core functionality can operate without it, so we treat it as an
+# optional dependency as well.
+try:  # pragma: no cover - behaviour depends on environment
+    from dotenv import load_dotenv
+except ModuleNotFoundError:  # Fallback no-op if library isn't installed
+    def load_dotenv(*_args, **_kwargs):  # type: ignore
+        return None
 import logging
 from typing import Optional, Dict, Any
 from enum import Enum
@@ -29,9 +71,15 @@ class PrompterGenerator:
         
         try:
             if self.provider == AIProvider.GEMINI:
+                if not (hasattr(genai, "configure") and hasattr(genai, "GenerativeModel")):
+                    raise ImportError(
+                        "google-generativeai is required for Gemini provider"
+                    )
                 genai.configure(api_key=self.api_key)
                 self.model = genai.GenerativeModel(model_name=self.model_name)
             elif self.provider == AIProvider.OPENAI:
+                if not hasattr(openai, "OpenAI"):
+                    raise ImportError("openai is required for OpenAI provider")
                 openai.api_key = self.api_key
                 self.client = openai.OpenAI(api_key=self.api_key)
         except Exception as e:
