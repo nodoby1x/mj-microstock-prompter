@@ -1,9 +1,32 @@
 
 import logging
+import json
 from typing import Optional, Dict, Any, List
 from enum import Enum
-from microstock_templates import get_microstock_enhancements, build_microstock_prompt_enhancement, INDUSTRY_KEYWORDS
+from microstock_templates import (
+    get_microstock_enhancements,
+    build_microstock_prompt_enhancement,
+    INDUSTRY_KEYWORDS,
+)
 import random
+
+try:  # Optional dependency used in tests
+    import google.generativeai as genai  # type: ignore
+except Exception:  # pragma: no cover - library may not be installed
+    class _GenAIStub:  # pragma: no cover - minimal stub for tests
+        class GenerativeModel:  # noqa: D401 - simple stand-in
+            pass
+
+        @staticmethod
+        def configure(*args, **kwargs):  # noqa: D401 - simple stand-in
+            return None
+
+    genai = _GenAIStub()
+
+try:  # Optional dependency used in tests
+    import openai  # type: ignore
+except Exception:  # pragma: no cover - library may not be installed
+    openai = None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,14 +46,16 @@ class PrompterGenerator:
         self.api_key = api_key
         self.model_name = model_name
         self.provider = AIProvider(provider.lower())
-        
+
         try:
             if self.provider == AIProvider.GEMINI:
+                if genai is None:
+                    raise ImportError("google-generativeai library is required for Gemini provider")
                 genai.configure(api_key=self.api_key)
                 self.model = genai.GenerativeModel(model_name=self.model_name)
             elif self.provider == AIProvider.OPENAI:
-                if not hasattr(openai, "OpenAI"):
-                    raise ImportError("openai is required for OpenAI provider")
+                if openai is None or not hasattr(openai, "OpenAI"):
+                    raise ImportError("openai library is required for OpenAI provider")
                 openai.api_key = self.api_key
                 self.client = openai.OpenAI(api_key=self.api_key)
         except Exception as e:
