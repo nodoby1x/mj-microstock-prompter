@@ -12,7 +12,7 @@ from PIL.ExifTags import TAGS
 import piexif
 import logging
 from datetime import datetime
-from controller import PrompterGenerator
+from controller import PrompterGenerator, AIProvider
 from microstock_optimizer import optimizer
 import base64
 import io
@@ -118,37 +118,81 @@ class ImageMetadataExtractor:
         return exif_data
     
     def _generate_ai_keywords(self, image_path: str) -> Dict[str, Any]:
-        """Generate AI-powered keywords and description for the image"""
+        """Generate keywords, title and description for an image.
+
+        When an AI generator is configured, the image is analyzed using the
+        selected provider.  If no generator is available or the API call fails,
+        a simple placeholder result is returned.  The placeholder keeps the
+        rest of the pipeline working during tests and offline use.
+        """
+
         try:
-            # Create a prompt to analyze the image content
             analysis_prompt = (
-                "Analyze this image for microstock purposes. Provide:\n"
-                "1. A professional title (max 100 characters)\n"
-                "2. A compelling description (max 200 words)\n"
-                "3. 15-25 relevant keywords separated by commas\n"
-                "4. The primary category (Business, Technology, Lifestyle, Healthcare, etc.)\n"
-                "5. Commercial appeal rating (1-10)\n"
-                "Focus on what buyers would search for on stock photo sites."
+                "Analyze this image for microstock purposes and respond with a JSON "
+                "object containing the keys: ai_title, ai_description, "
+                "ai_keywords (list of words), ai_category, and commercial_appeal "
+                "(1-10)."
             )
-            
-            # For demonstration, we'll create a basic analysis
-            # In a real implementation, you'd use image recognition APIs
-            
+
+            if self.generator:
+                try:
+                    with Image.open(image_path) as img:
+                        buffer = io.BytesIO()
+                        img.save(buffer, format="JPEG")
+                        img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+                    if self.generator.provider == AIProvider.GEMINI:
+                        response = self.generator.model.generate_content([
+                            {"mime_type": "image/jpeg", "data": img_b64},
+                            analysis_prompt,
+                        ])
+                        ai_text = response.text
+                    elif self.generator.provider == AIProvider.OPENAI:
+                        response = self.generator.client.chat.completions.create(
+                            model="gpt-4.1-mini",
+                            messages=[{
+                                "role": "user",
+                                "content": analysis_prompt +
+                                           f"\nIMAGE_BASE64:{img_b64}"
+                            }],
+                            max_tokens=500,
+                        )
+                        ai_text = response.choices[0].message.content
+                    else:
+                        ai_text = None
+
+                    if ai_text:
+                        data = json.loads(ai_text)
+                        return {
+                            'ai_title': data.get('ai_title', ''),
+                            'ai_description': data.get('ai_description', ''),
+                            'ai_keywords': ', '.join(data.get('ai_keywords', [])),
+                            'ai_category': data.get('ai_category', ''),
+                            'commercial_appeal': data.get('commercial_appeal', 0),
+                            'ai_generated': True,
+                            'generation_timestamp': datetime.now().isoformat()
+                        }
+                except Exception as e:
+                    logger.warning(f"AI keyword generation failed, using placeholder: {e}")
+
             base_keywords = [
                 "professional", "business", "modern", "commercial", "high-quality",
                 "stock photo", "marketing", "advertising", "corporate", "contemporary"
             ]
-            
+
             return {
                 'ai_title': 'Professional Business Concept Image',
-                'ai_description': 'High-quality professional image perfect for commercial use in business presentations, marketing materials, and corporate communications.',
+                'ai_description': (
+                    'High-quality professional image perfect for commercial use in '
+                    'business presentations, marketing materials, and corporate communications.'
+                ),
                 'ai_keywords': ', '.join(base_keywords),
                 'ai_category': 'Business',
                 'commercial_appeal': 8,
-                'ai_generated': True,
+                'ai_generated': False,
                 'generation_timestamp': datetime.now().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Error generating AI keywords: {e}")
             return {'error': str(e)}
