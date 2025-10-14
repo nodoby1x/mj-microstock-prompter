@@ -48,6 +48,32 @@ body {
     border-radius: 0.375rem;
 }
 
+.analysis-card {
+    border-left: 4px solid #0d6efd;
+}
+
+.analysis-heading {
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #495057;
+}
+
+.analysis-list {
+    margin-bottom: 0;
+    padding-left: 1.2rem;
+}
+
+.analysis-list li + li {
+    margin-top: 0.35rem;
+}
+
+.keyword-badge {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
 textarea:read-only {
     background-color: #f8f9fa;
 }

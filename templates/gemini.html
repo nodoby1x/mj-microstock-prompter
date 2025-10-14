@@ -129,14 +129,57 @@
                         <input type="text" class="form-control" id="configMj" name="configMj" value="--ar 16:9 --q 2 --stylize 100 --chaos 10">
                     </div>
                     
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end flex-wrap">
+                        <button type="button" class="btn btn-outline-primary" id="analyzeBtn">📈 Analyze Marketability</button>
                         <button type="button" class="btn btn-success" id="generateBtn">🎨 Generate Prompts</button>
                         <button type="button" class="btn btn-secondary" id="clearBtn">Clear All</button>
                     </div>
                 </form>
             </div>
         </div>
-        
+
+        <div class="mt-4" id="analysisContainer" style="display: none;">
+            <div class="card analysis-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">📈 Marketability Insights</h5>
+                    <span class="badge bg-primary" id="marketabilityBadge">Score: --</span>
+                </div>
+                <div class="card-body">
+                    <div id="analysisLoading" class="text-center text-muted" style="display: none;">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 mb-0">Analyzing prompt for commercial success...</p>
+                    </div>
+                    <div id="analysisContent" class="d-none">
+                        <div class="mb-3">
+                            <div class="progress">
+                                <div class="progress-bar" id="marketabilityProgress" role="progressbar" style="width: 0%;" aria-valuemin="0" aria-valuemax="100">0 / 100</div>
+                            </div>
+                        </div>
+                        <div class="row gy-3">
+                            <div class="col-md-6">
+                                <h6 class="analysis-heading">Key Suggestions</h6>
+                                <ul class="analysis-list" id="suggestionsList"></ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="analysis-heading">Missing Elements</h6>
+                                <ul class="analysis-list" id="missingElementsList"></ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="analysis-heading">Trending Alternatives</h6>
+                                <ul class="analysis-list" id="trendingList"></ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="analysis-heading">Optimization Tips</h6>
+                                <ul class="analysis-list" id="tipsList"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="mt-4" id="promptsContainer" style="display: none;">
             <div class="card">
                 <div class="card-header">
@@ -219,13 +262,13 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         if (!data.api_key || !data.main_base) {
-            alert('Please provide API key and main subject');
+            showAlert('Please provide API key and main subject before generating prompts.', 'warning');
             return;
         }
-        
-        document.getElementById('loadingContainer').style.display = 'block';
+
+        showLoading(true);
         document.getElementById('promptsContainer').style.display = 'none';
-        
+
         try {
             const response = await fetch('/api/generate_prompts', {
                 method: 'POST',
@@ -240,37 +283,211 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 displayPrompts(result.prompts);
             } else {
-                alert('Error: ' + result.error);
+                showAlert(result.error || 'Unable to generate prompts right now.', 'danger');
             }
         } catch (error) {
-            alert('Error: ' + error.message);
+            showAlert(error.message, 'danger');
         } finally {
-            document.getElementById('loadingContainer').style.display = 'none';
+            showLoading(false);
         }
     });
-    
+
     // Clear prompts
     clearBtn.addEventListener('click', function() {
         document.getElementById('promptsContainer').style.display = 'none';
         document.getElementById('promptsContent').innerHTML = '';
+        document.getElementById('analysisContainer').style.display = 'none';
     });
-    
+
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const analysisContainer = document.getElementById('analysisContainer');
+    const analysisLoading = document.getElementById('analysisLoading');
+    const analysisContent = document.getElementById('analysisContent');
+    const marketabilityProgress = document.getElementById('marketabilityProgress');
+    const marketabilityBadge = document.getElementById('marketabilityBadge');
+
+    analyzeBtn.addEventListener('click', async function() {
+        const configData = new FormData(document.getElementById('configForm'));
+        const mainBase = configData.get('mainBase')?.trim();
+
+        if (!mainBase) {
+            showAlert('Add a main subject to analyze its marketability.', 'warning');
+            return;
+        }
+
+        const payload = {
+            main_base: mainBase,
+            theme: configData.get('theme'),
+            elements: configData.get('elements')
+        };
+
+        analysisContainer.style.display = 'block';
+        analysisLoading.style.display = 'block';
+        analysisContent.classList.add('d-none');
+        analyzeBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/analyze_prompt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to analyze prompt.');
+            }
+
+            updateAnalysis(result);
+        } catch (error) {
+            showAlert(error.message, 'danger');
+        } finally {
+            analysisLoading.style.display = 'none';
+            analyzeBtn.disabled = false;
+        }
+    });
+
+    function updateAnalysis(analysis) {
+        analysisContent.classList.remove('d-none');
+
+        const score = Number.parseInt(analysis.marketability_score || 0, 10);
+        const clampedScore = Math.max(0, Math.min(100, Number.isFinite(score) ? score : 0));
+
+        marketabilityProgress.style.width = `${clampedScore}%`;
+        marketabilityProgress.setAttribute('aria-valuenow', clampedScore.toString());
+        marketabilityProgress.textContent = `${clampedScore} / 100`;
+        marketabilityProgress.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+
+        if (clampedScore >= 70) {
+            marketabilityProgress.classList.add('bg-success');
+        } else if (clampedScore >= 40) {
+            marketabilityProgress.classList.add('bg-warning');
+        } else {
+            marketabilityProgress.classList.add('bg-danger');
+        }
+
+        marketabilityBadge.textContent = `Score: ${clampedScore}`;
+
+        renderList('suggestionsList', analysis.suggestions, 'Your prompt already includes key commercial drivers.');
+        renderList('missingElementsList', analysis.missing_elements, 'No missing commercial elements detected.');
+        renderList('trendingList', analysis.trending_alternatives, 'Try experimenting with related trending subjects.');
+        renderList('tipsList', analysis.optimization_tips, 'Your prompt is highly optimized—great work!');
+    }
+
+    function renderList(elementId, items, emptyMessage) {
+        const listElement = document.getElementById(elementId);
+        listElement.innerHTML = '';
+
+        if (!items || items.length === 0) {
+            const emptyItem = document.createElement('li');
+            emptyItem.className = 'text-muted';
+            emptyItem.textContent = emptyMessage;
+            listElement.appendChild(emptyItem);
+            return;
+        }
+
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            listElement.appendChild(li);
+        });
+    }
+
     function displayPrompts(prompts) {
         const container = document.getElementById('promptsContent');
         container.innerHTML = '';
-        
+
         prompts.forEach((prompt, index) => {
             const promptDiv = document.createElement('div');
             promptDiv.className = 'mb-3';
-            promptDiv.innerHTML = `
-                <h6>Prompt ${prompt.index} (Round ${prompt.round})</h6>
-                <textarea class="form-control" rows="3" readonly>${prompt.prompt}</textarea>
-                <small class="text-muted">Provider: ${prompt.provider}</small>
-            `;
+
+            const header = document.createElement('div');
+            header.className = 'd-flex justify-content-between align-items-center mb-2';
+
+            const title = document.createElement('h6');
+            title.className = 'mb-0';
+            title.textContent = `Prompt ${prompt.index} (Round ${prompt.round})`;
+
+            const providerBadge = document.createElement('span');
+            providerBadge.className = 'badge bg-secondary';
+            providerBadge.textContent = (prompt.provider || '').toUpperCase();
+
+            header.appendChild(title);
+            header.appendChild(providerBadge);
+
+            const textarea = document.createElement('textarea');
+            textarea.className = 'form-control';
+            textarea.rows = 3;
+            textarea.readOnly = true;
+            textarea.value = prompt.prompt || '';
+
+            const metaContainer = document.createElement('div');
+            metaContainer.className = 'mt-2';
+
+            metaContainer.appendChild(createMetaItem('Title', prompt.title));
+            metaContainer.appendChild(createMetaItem('Description', prompt.description));
+
+            const keywordsLabel = document.createElement('p');
+            keywordsLabel.className = 'mb-1';
+            const keywordsStrong = document.createElement('strong');
+            keywordsStrong.textContent = 'Keywords: ';
+            keywordsLabel.appendChild(keywordsStrong);
+
+            const keywordsWrapper = document.createElement('div');
+            keywordsWrapper.className = 'd-flex flex-wrap gap-1';
+
+            if (prompt.keywords) {
+                const keywords = prompt.keywords.split(',');
+                keywords
+                    .map(keyword => keyword.trim())
+                    .filter(keyword => keyword.length > 0)
+                    .forEach(keyword => {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge rounded-pill keyword-badge';
+                        badge.textContent = keyword;
+                        keywordsWrapper.appendChild(badge);
+                    });
+            }
+
+            if (!keywordsWrapper.hasChildNodes()) {
+                const emptyKeyword = document.createElement('span');
+                emptyKeyword.className = 'text-muted';
+                emptyKeyword.textContent = 'No keywords generated.';
+                keywordsWrapper.appendChild(emptyKeyword);
+            }
+
+            keywordsLabel.appendChild(keywordsWrapper);
+
+            const categoryItem = createMetaItem('Category', prompt.category);
+            categoryItem.classList.add('text-muted');
+
+            metaContainer.appendChild(keywordsLabel);
+            metaContainer.appendChild(categoryItem);
+
+            promptDiv.appendChild(header);
+            promptDiv.appendChild(textarea);
+            promptDiv.appendChild(metaContainer);
+
             container.appendChild(promptDiv);
         });
-        
+
         document.getElementById('promptsContainer').style.display = 'block';
+    }
+
+    function createMetaItem(label, value) {
+        const paragraph = document.createElement('p');
+        paragraph.className = 'mb-1';
+
+        const strongLabel = document.createElement('strong');
+        strongLabel.textContent = `${label}: `;
+
+        paragraph.appendChild(strongLabel);
+        paragraph.appendChild(document.createTextNode(value || '—'));
+
+        return paragraph;
     }
 });
 </script>
